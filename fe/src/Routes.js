@@ -13,6 +13,8 @@ import UserAccount from '@/pages/UserAccount/UserAccount';
 import Users from '@/pages/UserAccount/Users';
 import Consultation from '@/pages/Consultation/Consultation';
 import Patients from '@/pages/Patients/Patients';
+import WalkInPatients from '@/pages/Patients/WalkInPatients';
+import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
 import PatientDetails from '@/pages/Patients/PatientDetails';
 import MyPayments from '@/pages/Payments/MyPayments';
 import Payouts from '@/pages/Payments/Payouts';
@@ -150,6 +152,16 @@ export default new Router({
           path: 'patient-details/:patient',
           name: 'patientdetails',
           component: PatientDetails,
+        },
+        {
+          path: 'walkinpatients',
+          name: 'walkinpatients',
+          component: WalkInPatients,
+        },
+        {
+          path: 'walk-in-patient-details',
+          name: 'walkinpatientdetails',
+          component: WalkInPatientDetails,
         },
         {
           path: 'user-details/:user',
