@@ -12,9 +12,12 @@ class PrescriptionController extends Controller
 {
     public function index()
     {
-        $prescriptions = Prescription::with('patient', 'doctor', 'items')
-            ->latest()->paginate(15);
-        return view('prescriptions.index', compact('prescriptions'));
+        $prescriptions = Prescription::with('patient', 'doctor', 'items')->latest()->paginate(15);
+        return response()->json([
+            "success" => true,
+            "message" => "Prescrition Details retrieved successfully.",
+            "data" => $prescriptions
+        ], 200);
     }
 
     public function create(Patient $patient)
@@ -36,7 +39,7 @@ class PrescriptionController extends Controller
 
         $prescription = Prescription::create([
             'patient_id' => $validated['patient_id'],
-            'doctor_id' => auth()->id(),
+            'doctor_id' => $request['doctor_id'],
             'notes' => $validated['notes']
         ]);
 
@@ -52,13 +55,28 @@ class PrescriptionController extends Controller
             ]);
         }
 
-        return redirect()->route('patients.show', $validated['patient_id'])
-            ->with('success', 'Prescription created successfully!');
+        return response()->json([
+            "success" => true,
+            "message" => "Prescription created successfully!",
+            "data" => $prescription
+        ], 201);
     }
 
-    public function show(Prescription $prescription)
+    public function xshow(Prescription $prescription)
     {
         $prescription->load('patient', 'doctor', 'items.drug');
         return view('prescriptions.show', compact('prescription'));
+    }
+
+    public function show($id)
+    {
+        $prescription = Prescription::findOrFail($id);
+        // load relationships
+        $prescription->load('patient', 'doctor', 'items.drug');
+        return response()->json([
+            'success' => true,
+            'message' => 'Prescription Details retrieved successfully.',
+            'data'    => $prescription,
+        ]);
     }
 }

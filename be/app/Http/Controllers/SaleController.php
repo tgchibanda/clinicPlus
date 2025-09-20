@@ -15,12 +15,16 @@ class SaleController extends Controller
     {
         $sales = Sale::with('patient', 'pharmacist', 'items.drug')
             ->latest()->paginate(15);
-        return view('sales.index', compact('sales'));
+        return response()->json([
+            "success" => true,
+            "message" => "Sales Details retrieved successfully.",
+            "data" => $sales
+        ], 200);
     }
 
     public function create(Prescription $prescription = null)
     {
-        $prescription?->load('patient', 'items.drug');
+        $prescription->load('patient', 'items.drug');
         $drugs = Drug::where('stock_quantity', '>', 0)->get();
         return view('sales.create', compact('prescription', 'drugs'));
     }
@@ -28,6 +32,7 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'pharmacist_id'   => 'required|exists:users,id',
             'patient_id' => 'required|exists:patients,id',
             'prescription_id' => 'nullable|exists:prescriptions,id',
             'payment_method' => 'required|in:cash,voucher',
@@ -64,7 +69,7 @@ class SaleController extends Controller
             $sale = Sale::create([
                 'patient_id' => $validated['patient_id'],
                 'prescription_id' => $validated['prescription_id'],
-                'pharmacist_id' => auth()->id(),
+                'pharmacist_id'   => $validated['pharmacist_id'],
                 'total_amount' => $totalAmount,
                 'payment_method' => $validated['payment_method'],
                 'voucher_code' => $validated['voucher_code']
@@ -94,10 +99,16 @@ class SaleController extends Controller
                 // Update prescription status
                 $this->updatePrescriptionStatus($prescription);
             }
+
+            return response()->json([
+                    "success" => true,
+                    "message" => "Payment updated!",
+                    "data" => $sale
+                ], 201);
         });
 
-        return redirect()->route('sales.index')
-            ->with('success', 'Sale completed successfully!');
+
+
     }
 
     private function updatePrescriptionStatus(Prescription $prescription)

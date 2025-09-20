@@ -58,10 +58,9 @@
       <cookie-law theme="dark-lime"></cookie-law>
       2021 &copy; clinicPlus App Developed By
       <a
-        href="https://ernestmuroiwa.com"
         rel="nofollow noopener noreferrer"
         target="_blank"
-        >GM58</a
+        >Takunda Chibanda</a
       >
       <div>
         <router-link class="d-block text-center" to="privacy"

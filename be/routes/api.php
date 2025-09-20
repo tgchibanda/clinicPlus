@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PatientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,11 +65,14 @@ Route::middleware('auth:api')->middleware('cors')->group(function(){
 
 
     // Patient routes
+
     Route::apiResources(['walk_in_patient_details' => 'PatientController']);
-    Route::resource('patients', WalkInPatientController::class);
-    Route::post('patients/{patient}/assign-doctor', [PatientController::class, 'assignDoctor'])->name('patients.assign-doctor');
+    Route::get('walk_in_patient_details/{id}/walk-in-patient-details', [PatientController::class, 'walkInPatientDetails']);
+    Route::post('walk_in_patient_details/{patient}/assign-doctor', [PatientController::class, 'assignDoctor'])->name('patients.assign-doctor');
     
     // Drug routes
+    Route::apiResources(['drug_details' => 'DrugController']);
+    Route::get('drug_details/{id}/drug-details', [DrugController::class, 'drugDetails']);
     Route::resource('drugs', DrugController::class);
     Route::post('drugs/{drug}/update-stock', [DrugController::class, 'updateStock'])->name('drugs.update-stock');
     

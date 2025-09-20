@@ -15,6 +15,8 @@ import { Form, HasError, AlertError } from 'vform';
 
 // If you don't need the styles, do not connect
 import 'sweetalert2/dist/sweetalert2.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 import store from './store';
 import router from './Routes';
@@ -29,8 +31,12 @@ import UserRole from "./components/UserDetails/UserRole";
 import MyPractice from "./components/UserDetails/MyPractice";
 import BookConsultation from "./components/Patients/BookConsultation";
 import PatientsTable from "./components/Patients/PatientsTable";
-import WalkInPatientsTable from "./components/Patients/WalkInPatientsTable";
+import PrescriptionsTable from "./components/Prescriptions/PrescriptionsTable";
+import DrugsTable from "./components/Drugs/DrugsTable";
 import ConsultationTable from "./components/Patients/ConsultationTable";
+import DrugDetails from "./components/Drugs/DrugDetails";
+import SalesTable from "./components/Sales/SalesTable";
+import WalkInPatientsTable from "./components/Patients/WalkInPatientsTable";
 import WalkInPatientDetails from "./components/Patients/WalkInPatientDetails";
 import PatientDetails from "./components/Patients/PatientDetails";
 import PayPal from "./components/Payments/PayPal";
@@ -59,8 +65,12 @@ Vue.component('my-practice', MyPractice);
 Vue.component('book-consultation', BookConsultation);
 Vue.component('consultation-table', ConsultationTable);
 Vue.component('patients-table', PatientsTable);
-Vue.component('walk-in-patients-table', WalkInPatientsTable);
+Vue.component('prescriptions-table', PrescriptionsTable);
+Vue.component('drugs-table', DrugsTable);
 Vue.component('patient-details', PatientDetails);
+Vue.component('drug-details', DrugDetails);
+Vue.component('sales-table', SalesTable);
+Vue.component('walk-in-patients-table', WalkInPatientsTable);
 Vue.component('walk-in-patient-details', WalkInPatientDetails);
 Vue.component('user-role', UserRole);
 Vue.component('paypal', PayPal);

@@ -8,10 +8,17 @@ use Illuminate\Http\Request;
 class DrugController extends Controller
 {
     public function index()
-    {
+    {        
         $drugs = Drug::latest()->paginate(15);
         $lowStockDrugs = Drug::where('stock_quantity', '<=', \DB::raw('minimum_stock_level'))->count();
-        return view('drugs.index', compact('drugs', 'lowStockDrugs'));
+        return response()->json([
+            "success" => true,
+            "message" => "Drugs Details retrieved successfully.",
+            "data" => [
+            "drugs" => $drugs,
+            "low_stock_count" => $lowStockDrugs
+        ]
+        ], 200);
     }
 
     public function create()
@@ -41,6 +48,17 @@ class DrugController extends Controller
     public function show(Drug $drug)
     {
         return view('drugs.show', compact('drug'));
+    }
+
+    public function drugDetails($id)
+    {
+        $drug = Drug::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Drug Details retrieved successfully.',
+            'data'    => $drug,
+        ]);
     }
 
     public function edit(Drug $drug)

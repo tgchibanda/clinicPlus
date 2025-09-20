@@ -9,6 +9,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.0.1",
     "animate.css": "^4.1.1",
     "apexcharts": "^3.24.0",
     "awesome-bootstrap-checkbox": "^1.0.1",

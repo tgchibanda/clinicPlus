@@ -50,10 +50,12 @@
               <th>First Name</th>
               <th>Last Name</th>
               <th>Gender</th>
-              <th>Date Of Birth</th>
+              <th>D.O.B</th>
               <th>Email</th>
               <th>Phone Number</th>
-              <th>Payment Method</th>
+              <th>Payment</th>
+              <th>Doctor</th>
+              <th>Status</th>
               <th>Book</th>
             </tr>
           </thead>
@@ -61,11 +63,22 @@
             <tr v-for="row in patientDetails.data" :key="row.id">
               <td>{{ row.first_name }}</td>
               <td>{{ row.last_name }}</td>
-              <td>{{ row.gender }}</td>
-              <td>{{ row.date_of_birth }}</td>
+              <td>{{ row.gender.charAt(0).toUpperCase() + row.gender.slice(1)}}</td>
+              <td>{{ new Date(row.date_of_birth).toLocaleDateString() }}</td>
               <td>{{ row.email }}</td>
               <td>{{ row.phone }}</td>
-              <td>{{ row.payment_method }}</td>
+              <td>{{ row.payment_method.charAt(0).toUpperCase() + row.payment_method.slice(1) }}</td>
+              <td>{{ row.doctor ? row.doctor.name : '--' }}</td>
+              <td>
+                <span class="badge" :class="row.status === 'completed' ? 'bg-success' : 'bg-warning'">
+                  {{ row.status.charAt(0).toUpperCase() + row.status.slice(1) }}
+                </span>
+              </td>
+              <td>
+                <b-button variant="primary" @click="viewDetails(row)"
+                  ><span class="fa fa-search-plus" /> View Details</b-button
+                >
+              </td>
               <td>
                 <b-button
                   v-b-modal.modal-consultation
@@ -114,6 +127,9 @@ export default {
         .catch((error) => {
           this.$swal("error!", "There was an error" + error, "error");
         });
+    },
+    viewDetails(item) {
+      this.$router.push({ name: "walkinpatientpage", params: { patient: item.id } });
     },
     sendInfo(item) {
       this.selectedPatient = item;

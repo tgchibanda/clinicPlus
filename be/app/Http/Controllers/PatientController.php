@@ -85,6 +85,17 @@ class PatientController extends Controller
         return view('patients.show', compact('patient'));
     }
 
+    public function walkInPatientDetails($id)
+    {
+        $patient = Patient::findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'WalkIn Patient Details retrieved successfully.',
+            'data'    => $patient,
+        ]);
+    }
+
     public function assignDoctor(Request $request, Patient $patient)
     {
         $request->validate([

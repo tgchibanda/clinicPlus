@@ -66,27 +66,6 @@
               <td>{{ row.email }}</td>
               <td>{{ row.mobile_no }}</td>
               <td>{{ row.city }}</td>
-              <!-- <td>
-                <b-button v-b-modal.modal-map variant="warning"
-                  ><i class="fa fa-map-marker" aria-hidden="true"></i> View on
-                  Map</b-button
-                >
-              </td> -->
-              <!-- 
-              <td>
-                <b-badge
-                  :variant="
-                    row.status === 'Pending'
-                      ? 'success'
-                      : row.status === 'Declined'
-                      ? 'danger'
-                      : 'info'
-                  "
-                  pill
-                >
-                  {{ row.status }}
-                </b-badge>
-              </td> -->
               <td>
                 <b-button
                   v-b-modal.modal-consultation

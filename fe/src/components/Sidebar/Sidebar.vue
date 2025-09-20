@@ -126,27 +126,27 @@
         <NavLink
             :activeItem="activeItem"
             header="Pharmacy"
-            link="/app/walkinpatients"
+            link="/app/drugs"
             iconName="flaticon-compass"
-            index="walkinpatients"
+            index="drugs"
             isHeader
           />
 
         <NavLink
             :activeItem="activeItem"
             header="Prescriptions"
-            link="/app/walkinpatients"
+            link="/app/prescriptions"
             iconName="flaticon-compass"
-            index="walkinpatients"
+            index="prescriptions"
             isHeader
           />
 
         <NavLink
             :activeItem="activeItem"
             header="Sales"
-            link="/app/walkinpatients"
+            link="/app/sales"
             iconName="flaticon-compass"
-            index="walkinpatients"
+            index="sales"
             isHeader
           />
 

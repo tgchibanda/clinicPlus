@@ -77,10 +77,9 @@
     <footer class="auth-footer">
       2021 &copy; clinicPlus App Developed By
       <a
-        href="https://ernestmuroiwa.com"
         rel="nofollow noopener noreferrer"
         target="_blank"
-        >GM58</a
+        >Takunda Chibanda</a
       >
     </footer>
   </div>

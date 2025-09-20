@@ -13,8 +13,10 @@ import UserAccount from '@/pages/UserAccount/UserAccount';
 import Users from '@/pages/UserAccount/Users';
 import Consultation from '@/pages/Consultation/Consultation';
 import Patients from '@/pages/Patients/Patients';
-import WalkInPatients from '@/pages/Patients/WalkInPatients';
-import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
+import Drugs from '@/pages/Drugs/Drugs';
+import Prescriptions from '@/pages/Prescriptions/Prescriptions';
+import PrescriptionPage from '@/pages/Prescriptions/PrescriptionPage';
+import DrugDetails from '@/pages/Drugs/DrugDetails';
 import PatientDetails from '@/pages/Patients/PatientDetails';
 import MyPayments from '@/pages/Payments/MyPayments';
 import Payouts from '@/pages/Payments/Payouts';
@@ -23,6 +25,11 @@ import Directory from '@/pages/General/Directory';
 import AddDirectory from '@/pages/General/AddDirectory';
 import Feedback from '@/pages/General/Feedback';
 import MonthlyCondition from '@/pages/General/MonthlyCondition';
+import Sales from '@/pages/Sales/Sales';
+import WalkInPatients from '@/pages/Patients/WalkInPatients';
+import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
+import WalkInPatientPage from '@/pages/Patients/WalkInPatientPage';
+import DrugPage from '@/pages/Drugs/DrugPage';
 import UserDetailsPage from '@/pages/UserAccount/UserDetailsPage';
 import PaymentReport from "@/pages/Reports/PaymentReport";
 import PayoutReport from "@/pages/Reports/PayoutReport";
@@ -154,6 +161,11 @@ export default new Router({
           component: PatientDetails,
         },
         {
+          path: 'sales',
+          name: 'sales',
+          component: Sales,
+        },
+        {
           path: 'walkinpatients',
           name: 'walkinpatients',
           component: WalkInPatients,
@@ -162,6 +174,36 @@ export default new Router({
           path: 'walk-in-patient-details',
           name: 'walkinpatientdetails',
           component: WalkInPatientDetails,
+        },
+        {
+          path: 'walk-in-patient/:patient',
+          name: 'walkinpatientpage',
+          component: WalkInPatientPage,
+        },
+        {
+          path: 'drug-details',
+          name: 'drugdetails',
+          component: DrugDetails,
+        },
+        {
+          path: 'drug/:drug',
+          name: 'drugpage',
+          component: DrugPage,
+        },
+        {
+          path: 'drugs',
+          name: 'drugs',
+          component: Drugs,
+        },
+        {
+          path: 'prescription/:prescription',
+          name: 'prescriptionpage',
+          component: PrescriptionPage,
+        },
+        {
+          path: 'prescriptions',
+          name: 'prescriptions',
+          component: Prescriptions,
         },
         {
           path: 'user-details/:user',
@@ -222,17 +264,3 @@ export default new Router({
     },
   ],
 });
-
-// router.beforeEach((to, from, next) => {
-//   const publicPages = ['/login', '/register', '/home'];
-//   const authRequired = !publicPages.includes(to.path);
-//   const loggedIn = localStorage.getItem('user');
-
-//   // trying to access a restricted page + not logged in
-//   // redirect to login page
-//   if (authRequired && !loggedIn) {
-//     next('/login');
-//   } else {
-//     next();
-//   }
-// });
