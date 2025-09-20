@@ -25,6 +25,7 @@ import Directory from '@/pages/General/Directory';
 import AddDirectory from '@/pages/General/AddDirectory';
 import Feedback from '@/pages/General/Feedback';
 import MonthlyCondition from '@/pages/General/MonthlyCondition';
+import Reports from '@/pages/Reports/Reports';
 import Sales from '@/pages/Sales/Sales';
 import WalkInPatients from '@/pages/Patients/WalkInPatients';
 import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
@@ -204,6 +205,11 @@ export default new Router({
           path: 'prescriptions',
           name: 'prescriptions',
           component: Prescriptions,
+        },
+        {
+          path: 'reports',
+          name: 'reports',
+          component: Reports,
         },
         {
           path: 'user-details/:user',
