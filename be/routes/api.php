@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,6 +87,8 @@ Route::middleware('auth:api')->middleware('cors')->group(function(){
     
     // Report routes
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // Explicit JSON report endpoints
     Route::get('reports/stock', [ReportController::class, 'stockReport'])->name('reports.stock');
     Route::get('reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
 

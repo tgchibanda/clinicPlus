@@ -153,9 +153,9 @@
         <NavLink
             :activeItem="activeItem"
             header="Reports"
-            link="/app/walkinpatients"
+            link="/app/reports"
             iconName="flaticon-compass"
-            index="walkinpatients"
+            index="reports"
             isHeader
           />
 
