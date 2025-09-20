@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PatientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,5 +62,31 @@ Route::middleware('auth:api')->middleware('cors')->group(function(){
     Route::get('/getPayouts',['uses' => 'PayoutController@getPayouts']);
     Route::get('/getMonthlyCondition',['uses' => 'MonthlyConditionController@getMonthlyCondition']);
     Route::get('/dashboard/{id}/{account_type}',['uses' => 'DashboardController@getData']);
+
+
+    // Patient routes
+
+    Route::apiResources(['walk_in_patient_details' => 'PatientController']);
+    Route::get('walk_in_patient_details/{id}/walk-in-patient-details', [PatientController::class, 'walkInPatientDetails']);
+    Route::post('walk_in_patient_details/{patient}/assign-doctor', [PatientController::class, 'assignDoctor'])->name('patients.assign-doctor');
+    
+    // Drug routes
+    Route::apiResources(['drug_details' => 'DrugController']);
+    Route::get('drug_details/{id}/drug-details', [DrugController::class, 'drugDetails']);
+    Route::resource('drugs', DrugController::class);
+    Route::post('drugs/{drug}/update-stock', [DrugController::class, 'updateStock'])->name('drugs.update-stock');
+    
+    // Prescription routes
+    Route::resource('prescriptions', PrescriptionController::class);
+    Route::get('patients/{patient}/prescriptions/create', [PrescriptionController::class, 'create'])->name('patient.prescriptions.create');
+    
+    // Sale routes
+    Route::resource('sales', SaleController::class);
+    Route::get('prescriptions/{prescription}/sales/create', [SaleController::class, 'create'])->name('prescription.sales.create');
+    
+    // Report routes
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/stock', [ReportController::class, 'stockReport'])->name('reports.stock');
+    Route::get('reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
 
 });

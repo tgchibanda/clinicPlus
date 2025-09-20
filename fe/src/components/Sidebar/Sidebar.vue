@@ -112,6 +112,54 @@
         class="nav"
         v-if="userRole.status == 'active' && userRole.role == 'admin'"
       >
+           
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Walk In Patients"
+            link="/app/walkinpatients"
+            iconName="flaticon-compass"
+            index="walkinpatients"
+            isHeader
+          />
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Pharmacy"
+            link="/app/drugs"
+            iconName="flaticon-compass"
+            index="drugs"
+            isHeader
+          />
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Prescriptions"
+            link="/app/prescriptions"
+            iconName="flaticon-compass"
+            index="prescriptions"
+            isHeader
+          />
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Sales"
+            link="/app/sales"
+            iconName="flaticon-compass"
+            index="sales"
+            isHeader
+          />
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Reports"
+            link="/app/walkinpatients"
+            iconName="flaticon-compass"
+            index="walkinpatients"
+            isHeader
+          />
+
+
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"

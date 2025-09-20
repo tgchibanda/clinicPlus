@@ -16,10 +16,9 @@
         <footer class="contentFooter">
           clinicPlus Dashboard - Made by
           <a
-            href="https://ernestmuroiwa.com"
             rel="nofollow noopener noreferrer"
             target="_blank"
-            >GM58</a
+            >Takunda Chibanda</a
           >
         </footer>
       </v-touch>

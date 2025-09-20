@@ -130,6 +130,7 @@
       <b-row>
         <b-col xs="12">
           <patients-table></patients-table>
+          <walk-in-patients-table></walk-in-patients-table>
         </b-col>
       </b-row>
 
@@ -148,6 +149,7 @@ import userRole from "../../services/user-role";
 import authHeader from "../../services/auth-header";
 import PatientDetails from "../Patients/PatientDetails.vue";
 import PatientsTable from "../Patients/PatientsTable.vue";
+import WalkInPatientsTable from "../Patients/WalkInPatientsTable.vue";
 
 export default {
   name: "UserDashboard",
@@ -155,6 +157,7 @@ export default {
     Widget,
     PatientDetails,
     PatientsTable,
+    WalkInPatientsTable,
   },
   data() {
     return {

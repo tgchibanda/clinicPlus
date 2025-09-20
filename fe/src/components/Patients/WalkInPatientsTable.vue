@@ -19,17 +19,15 @@
       ></book-consultation>
     </b-modal>
     <b-modal id="modal-map" size="lg" title="Patient Location" hide-footer>
-      <!-- <book-consultation></book-consultation> -->
-      <!-- <patient-details></patient-details> -->
     </b-modal>
     <b-modal
-      id="modal-new-patient"
+      id="modal-new-walk-in-patient"
       size="lg"
-      ref="modal-new-patient"
-      title="New Patient"
+      ref="modal-new-walk-in-patient"
+      title="New Walk In Patient"
       hide-footer
     >
-      <patient-details></patient-details>
+      <walk-in-patient-details></walk-in-patient-details>
     </b-modal>
     <Widget
       title="<h5>My <span class='fw-semi-bold'>Patients</span></h5>"
@@ -38,34 +36,49 @@
       :fetchingData="this.loading"
     >
       <b-button
-        v-b-modal.modal-new-patient
+        v-b-modal.modal-new-walk-in-patient
         variant="primary"
         class="modal-button"
       >
         <i class="fa fa-plus" aria-hidden="true"></i>
-        Add New Patient</b-button
+        Add New Walk In Patient</b-button
       >
       <div class="table-responsive">
         <table class="table table-striped table-lg mb-0 requests-table">
           <thead>
             <tr class="text-muted">
-              <th>Fullname</th>
+              <th>First Name</th>
+              <th>Last Name</th>
               <th>Gender</th>
-              <th>Date Of Birth</th>
+              <th>D.O.B</th>
               <th>Email</th>
-              <th>Cellnumber</th>
-              <th>City</th>
+              <th>Phone Number</th>
+              <th>Payment</th>
+              <th>Doctor</th>
+              <th>Status</th>
               <th>Book</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="row in patientDetails.data" :key="row.id">
-              <td>{{ row.fullname }}</td>
-              <td>{{ row.gender }}</td>
-              <td>{{ row.dob }}</td>
+              <td>{{ row.first_name }}</td>
+              <td>{{ row.last_name }}</td>
+              <td>{{ row.gender.charAt(0).toUpperCase() + row.gender.slice(1)}}</td>
+              <td>{{ new Date(row.date_of_birth).toLocaleDateString() }}</td>
               <td>{{ row.email }}</td>
-              <td>{{ row.mobile_no }}</td>
-              <td>{{ row.city }}</td>
+              <td>{{ row.phone }}</td>
+              <td>{{ row.payment_method.charAt(0).toUpperCase() + row.payment_method.slice(1) }}</td>
+              <td>{{ row.doctor ? row.doctor.name : '--' }}</td>
+              <td>
+                <span class="badge" :class="row.status === 'completed' ? 'bg-success' : 'bg-warning'">
+                  {{ row.status.charAt(0).toUpperCase() + row.status.slice(1) }}
+                </span>
+              </td>
+              <td>
+                <b-button variant="primary" @click="viewDetails(row)"
+                  ><span class="fa fa-search-plus" /> View Details</b-button
+                >
+              </td>
               <td>
                 <b-button
                   v-b-modal.modal-consultation
@@ -87,7 +100,7 @@
 <script>
 import authHeader from "../../services/auth-header";
 export default {
-  name: "PatientsTable",
+  name: "WalkInPatientsTable",
   data() {
     return {
       errorMessage: null,
@@ -103,17 +116,20 @@ export default {
     };
   },
   methods: {
-    loadPatients() {
+    loadWalkInPatients() {
       this.loading = true;
       this.$axios
-        .get(this.$base_url + "patient_details/" + this.user_id, authHeader())
+        .get(this.$base_url + "walk_in_patient_details", authHeader())
         .then(({ data }) => {
-          this.patientDetails = data;
+          this.patientDetails = data.data;
           this.loading = false;
         })
         .catch((error) => {
           this.$swal("error!", "There was an error" + error, "error");
         });
+    },
+    viewDetails(item) {
+      this.$router.push({ name: "walkinpatientpage", params: { patient: item.id } });
     },
     sendInfo(item) {
       this.selectedPatient = item;
@@ -147,8 +163,8 @@ export default {
       this.gotoPayment(consultation_id);
     },
     closePatientsModal() {
-      this.$refs["modal-new-patient"].hide();
-      this.loadPatients();
+      this.$refs["modal-new-walk-in-patient"].hide();
+      this.loadWalkInPatients();
     },
   },
   created() {
@@ -158,7 +174,7 @@ export default {
     Fire.$on("closeModalPatient", () => {
       this.closePatientsModal();
     });
-    this.loadPatients();
+    this.loadWalkInPatients();
   },
 };
 </script>
