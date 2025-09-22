@@ -2,7 +2,7 @@
 <template>
   <section>
     <h1 class="page-title">
-      My - <span class="fw-semi-bold">Walk In Patients</span>
+      My - <span class="fw-semi-bold">Patients</span>
     </h1>
 
     <b-row>

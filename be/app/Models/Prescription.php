@@ -10,7 +10,7 @@ class Prescription extends Model
     use HasFactory;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'notes', 'status'
+        'patient_id', 'doctor_id', 'notes', 'status', 'consultation_id'
     ];
 
     public function patient()
@@ -38,5 +38,10 @@ class Prescription extends Model
         return $this->items->sum(function ($item) {
             return $item->quantity_prescribed * $item->unit_price;
         });
+    }
+
+    public function consultation()
+    {
+        return $this->belongsTo(Consultation::class);
     }
 }

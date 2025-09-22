@@ -27,46 +27,49 @@ class PrescriptionController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'patient_id' => 'required|exists:patients,id',
-            'notes' => 'nullable|string',
-            'drugs' => 'required|array|min:1',
-            'drugs.*.drug_id' => 'required|exists:drugs,id',
-            'drugs.*.quantity' => 'required|integer|min:1',
-            'drugs.*.dosage_instructions' => 'required|string'
+{
+    $validated = $request->validate([
+        'patient_id' => 'required|exists:patients,id',
+        'consultation_id' => 'required|exists:consultations,id',
+        'notes' => 'nullable|string',
+        'drugs' => 'required|array|min:1',
+        'drugs.*.drug_id' => 'required|exists:drugs,id',
+        'drugs.*.quantity' => 'required|integer|min:1',
+        'drugs.*.dosage_instructions' => 'required|string'
+    ]);
+
+    // Create prescription
+    $prescription = Prescription::create([
+        'patient_id' => $validated['patient_id'],
+        'consultation_id' => $validated['consultation_id'],
+        'doctor_id' => $request['doctor_id'],
+        'notes' => $validated['notes'] ?? null
+    ]);
+
+    // Add prescription items
+    foreach ($validated['drugs'] as $drugData) {
+        $drug = Drug::find($drugData['drug_id']);
+
+        PrescriptionItem::create([
+            'prescription_id' => $prescription->id,
+            'drug_id' => $drugData['drug_id'],
+            'quantity_prescribed' => $drugData['quantity'],
+            'dosage_instructions' => $drugData['dosage_instructions'],
+            'unit_price' => $drug->selling_price
         ]);
-
-        $prescription = Prescription::create([
-            'patient_id' => $validated['patient_id'],
-            'doctor_id' => $request['doctor_id'],
-            'notes' => $validated['notes']
-        ]);
-
-        foreach ($validated['drugs'] as $drugData) {
-            $drug = Drug::find($drugData['drug_id']);
-            
-            PrescriptionItem::create([
-                'prescription_id' => $prescription->id,
-                'drug_id' => $drugData['drug_id'],
-                'quantity_prescribed' => $drugData['quantity'],
-                'dosage_instructions' => $drugData['dosage_instructions'],
-                'unit_price' => $drug->selling_price
-            ]);
-        }
-
-        return response()->json([
-            "success" => true,
-            "message" => "Prescription created successfully!",
-            "data" => $prescription
-        ], 201);
     }
 
-    public function xshow(Prescription $prescription)
-    {
-        $prescription->load('patient', 'doctor', 'items.drug');
-        return view('prescriptions.show', compact('prescription'));
-    }
+    // ✅ Update patient status to completed
+    \App\Models\Patient::where('id', $validated['patient_id'])
+        ->update(['status' => 'completed']);
+
+    return response()->json([
+        "success" => true,
+        "message" => "Prescription created successfully!",
+        "data" => $prescription
+    ], 201);
+}
+
 
     public function show($id)
     {

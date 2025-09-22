@@ -9,14 +9,11 @@ class MedicalHistory extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'patient_id', 'history'
+        'consultation_id', 'history'
     ];
 
-    /**
-     * Get the user that owns a contact.
-     */
-    public function user()
+    public function consultation()
     {
-        return $this->belongsToMany(PatientDetail::class, 'patient_details')->withTimeStamps();;
+        return $this->belongsTo(\App\Models\Consultation::class, 'consultation_id');
     }
 }

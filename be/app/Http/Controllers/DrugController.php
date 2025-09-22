@@ -30,6 +30,7 @@ class DrugController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'batch_number' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:255',
             'selling_price' => 'required|numeric|min:0',
@@ -41,8 +42,10 @@ class DrugController extends Controller
 
         Drug::create($validated);
 
-        return redirect()->route('drugs.index')
-            ->with('success', 'Drug added successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Drug Details added successfully.',
+        ]);
     }
 
     public function show(Drug $drug)
@@ -70,6 +73,7 @@ class DrugController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'batch_number' => 'required|string|max:255',
             'description' => 'nullable|string',
             'category' => 'nullable|string|max:255',
             'selling_price' => 'required|numeric|min:0',

@@ -16,7 +16,7 @@ class PatientController extends Controller
         $patients = Patient::with('doctor')->latest()->paginate(15);
         return response()->json([
             "success" => true,
-            "message" => "WalkIn Patient Details retrieved successfully.",
+            "message" => "Patient Details retrieved successfully.",
             "data" => $patients
         ], 200);
     }
@@ -38,8 +38,7 @@ class PatientController extends Controller
             'dob' => 'nullable|date',
             'gender' => 'nullable|in:Male,Female',
             'address' => 'nullable|string',
-            'emergency_contact' => 'nullable|string|max:255',
-            'payment_method' => 'required|in:Cash',
+            'emergency_contact' => 'nullable|string|max:255'
         ]);
 
         $patient =  Patient::create([
@@ -51,8 +50,7 @@ class PatientController extends Controller
             'date_of_birth' => $request['dob'],
             'gender' => $request['gender'],
             'address' => $request['address'],
-            'emergency_contact' => $request['emergency_contact'],
-            'payment_method' => $request['payment_method']
+            'emergency_contact' => $request['emergency_contact']
         ]);
 
         
@@ -61,12 +59,12 @@ class PatientController extends Controller
         $sendEmail->sendEmail(
             $sendEmail->getEmail($request['user_id'], 'user'),
             "Congratulations, You have created {$request['first_name']} as a patient on clinicPlus",
-            'clinicPlus Walk In Patient Created'
+            'clinicPlus Patient Created'
         );
         $sendEmail->sendEmail(
             $request['email'],
-            "Congratulations {$request['first_name']}, You have been created as a walk in patient on clinicPlus",
-            'clinicPlus Walk In Patient Created'
+            "Congratulations {$request['first_name']}, You have been created as a patient on clinicPlus",
+            'clinicPlus Patient Created'
         );
         $sendEmail->sendEmail(
             env('ADMIN_EMAIL', 'admin@clinicPluszimbabwe.com'),
@@ -74,7 +72,7 @@ class PatientController extends Controller
 
         return response()->json([
             "success" => true,
-            "message" => "Walk In Patient Details saved successfully.",
+            "message" => "Patient Details saved successfully.",
             "data" => $patient
         ], 201);
     }
@@ -91,7 +89,7 @@ class PatientController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'WalkIn Patient Details retrieved successfully.',
+            'message' => 'Patient Details retrieved successfully.',
             'data'    => $patient,
         ]);
     }

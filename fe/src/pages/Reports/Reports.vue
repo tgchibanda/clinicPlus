@@ -4,16 +4,41 @@
       Reports — <span class="fw-semi-bold">Dashboard</span>
     </h1>
 
-    <b-tabs content-class="mt-3">
+    <b-tabs content-class="mt-3" v-model="activeTabIndex">
       <!-- =======================
            TAB 1: DASHBOARD
       ======================== -->
-      <b-tab title="Dashboard" active>
+      <b-tab title="Dashboard">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h4 class="mb-0"><i class="fas fa-chart-bar mr-2"></i>Reports Dashboard</h4>
+          <h4 class="mb-0">
+            <i class="fas fa-chart-bar mr-2"></i>Reports Dashboard
+          </h4>
           <div class="text-muted small">
-            <i class="fas fa-calendar mr-1"></i> Generated on {{ nowFmt }}
+            <i class="fas fa-calendar mr-1"></i>
+            {{ prettyDate(dashboardRange.start_date) }} – {{ prettyDate(dashboardRange.end_date) }}
+            <span class="ml-2">• Generated {{ nowFmt }}</span>
           </div>
+        </div>
+
+        <!-- Quick Range Filters -->
+        <div class="d-flex flex-wrap align-items-center mb-3 range-bar">
+          <label class="text-muted small mb-0 mr-2">Range:</label>
+          <div class="btn-group mr-2 mb-2">
+            <b-button :variant="rangeBtnVariant('day')"   size="sm" @click="applyRange('day')">Day</b-button>
+            <b-button :variant="rangeBtnVariant('week')"  size="sm" @click="applyRange('week')">Week</b-button>
+            <b-button :variant="rangeBtnVariant('month')" size="sm" @click="applyRange('month')">Month</b-button>
+            <b-button :variant="rangeBtnVariant('year')"  size="sm" @click="applyRange('year')">Year</b-button>
+          </div>
+
+          <b-input-group class="mr-2 mb-2 date-pickers">
+            <b-form-input type="date" v-model="dashboardRange.start_date" @change="onDashboardDatesChanged"/>
+            <b-input-group-text>to</b-input-group-text>
+            <b-form-input type="date" v-model="dashboardRange.end_date" @change="onDashboardDatesChanged"/>
+          </b-input-group>
+
+          <b-button size="sm" variant="primary" class="mb-2" @click="loadDashboard">
+            <i class="fas fa-sync mr-1"></i> Refresh
+          </b-button>
         </div>
 
         <!-- Quick Stats -->
@@ -24,7 +49,7 @@
                 <div>
                   <h6 class="mb-1">Total Patients</h6>
                   <h3 class="mb-0">{{ safeNum(dashboard.patients_count) }}</h3>
-                  <small>This month: {{ safeNum(dashboard.patients_this_month) }}</small>
+                  <small>In range: {{ safeNum(dashboard.patients_in_range) }}</small>
                 </div>
                 <div class="align-self-center">
                   <i class="fas fa-users fa-2x"></i>
@@ -38,7 +63,7 @@
                 <div>
                   <h6 class="mb-1">Total Sales</h6>
                   <h3 class="mb-0">{{ money(safeNum(dashboard.sales_total)) }}</h3>
-                  <small>This month: {{ money(safeNum(dashboard.sales_this_month)) }}</small>
+                  <small>In range: {{ money(safeNum(dashboard.sales_in_range)) }}</small>
                 </div>
                 <div class="align-self-center">
                   <i class="fas fa-dollar-sign fa-2x"></i>
@@ -115,7 +140,7 @@
                 </b-col>
               </b-row>
 
-              <b-button variant="primary" block @click="activeTab='Stock'">
+              <b-button variant="primary" block @click="activeTabIndex = 1">
                 <i class="fas fa-eye mr-1"></i> View Detailed Stock Report
               </b-button>
             </b-card>
@@ -133,8 +158,8 @@
                   <div class="text-success">
                     <i class="fas fa-dollar-sign fa-2x"></i>
                     <div class="mt-2">
-                      <strong>{{ money(safeNum(dashboard.todays_sales_total)) }}</strong>
-                      <br><small>Today's Sales</small>
+                      <strong>{{ money(safeNum(dashboard.sales_in_range)) }}</strong>
+                      <br><small>Revenue in Range</small>
                     </div>
                   </div>
                 </b-col>
@@ -142,14 +167,14 @@
                   <div class="text-info">
                     <i class="fas fa-receipt fa-2x"></i>
                     <div class="mt-2">
-                      <strong>{{ safeNum(dashboard.todays_sales_count) }}</strong>
+                      <strong>{{ safeNum(dashboard.transactions_in_range) }}</strong>
                       <br><small>Transactions</small>
                     </div>
                   </div>
                 </b-col>
               </b-row>
 
-              <b-button variant="success" block @click="activeTab='Sales'">
+              <b-button variant="success" block @click="activeTabIndex = 2">
                 <i class="fas fa-eye mr-1"></i> View Detailed Sales Report
               </b-button>
             </b-card>
@@ -167,8 +192,8 @@
                   <div class="text-primary">
                     <i class="fas fa-stethoscope fa-2x"></i>
                     <div class="mt-2">
-                      <strong>{{ safeNum(dashboard.todays_patients_count) }}</strong>
-                      <br><small>Today's Patients</small>
+                      <strong>{{ safeNum(dashboard.patients_in_range) }}</strong>
+                      <br><small>Patients in Range</small>
                     </div>
                   </div>
                 </b-col>
@@ -176,7 +201,7 @@
                   <div class="text-secondary">
                     <i class="fas fa-prescription fa-2x"></i>
                     <div class="mt-2">
-                      <strong>{{ safeNum(dashboard.todays_prescriptions_count) }}</strong>
+                      <strong>{{ safeNum(dashboard.prescriptions_in_range) }}</strong>
                       <br><small>Prescriptions</small>
                     </div>
                   </div>
@@ -225,7 +250,7 @@
         <!-- Recent Activity -->
         <b-card>
           <template #header>
-            <h5 class="mb-0"><i class="fas fa-clock mr-2"></i>Recent Activity (Today)</h5>
+            <h5 class="mb-0"><i class="fas fa-clock mr-2"></i>Recent Activity (In Range)</h5>
           </template>
 
           <b-row>
@@ -250,7 +275,7 @@
                   </span>
                 </div>
                 <div v-if="!(dashboard.recent_patients || []).length" class="list-group-item text-muted text-center">
-                  <i class="fas fa-info-circle"></i> No patients registered today
+                  <i class="fas fa-info-circle"></i> No patients in this range
                 </div>
               </div>
             </b-col>
@@ -276,7 +301,7 @@
                   </span>
                 </div>
                 <div v-if="!(dashboard.recent_sales || []).length" class="list-group-item text-muted text-center">
-                  <i class="fas fa-info-circle"></i> No sales recorded today
+                  <i class="fas fa-info-circle"></i> No sales in this range
                 </div>
               </div>
             </b-col>
@@ -485,31 +510,51 @@
           </div>
         </div>
 
-        <!-- Date Filter -->
+        <!-- Range + Date Filter -->
         <b-card class="mb-3">
-          <b-form @submit.prevent="loadSales">
-            <b-row>
-              <b-col md="4" class="mb-2">
-                <b-form-group label="Start Date">
-                  <b-form-input type="date" v-model="salesFilter.start_date" required />
-                </b-form-group>
-              </b-col>
-              <b-col md="4" class="mb-2">
-                <b-form-group label="End Date">
-                  <b-form-input type="date" v-model="salesFilter.end_date" required />
-                </b-form-group>
-              </b-col>
-              <b-col md="4" class="mb-2 d-flex align-items-end">
-                <b-button type="submit" variant="primary" block>
-                  <i class="fas fa-search mr-1"></i> Generate Report
-                </b-button>
-              </b-col>
-            </b-row>
-            <small class="text-muted">
-              <i class="fas fa-info-circle mr-1"></i>
-              Report period: {{ prettyDate(salesFilter.start_date) }} to {{ prettyDate(salesFilter.end_date) }}
-            </small>
-          </b-form>
+          <div class="d-flex flex-wrap align-items-end">
+            <div class="mr-3 mb-2">
+              <label class="text-muted small d-block mb-1">Quick Range</label>
+              <div class="btn-group">
+                <b-button :variant="salesRangeBtn('day')"   size="sm" @click="applySalesRange('day')">Day</b-button>
+                <b-button :variant="salesRangeBtn('week')"  size="sm" @click="applySalesRange('week')">Week</b-button>
+                <b-button :variant="salesRangeBtn('month')" size="sm" @click="applySalesRange('month')">Month</b-button>
+                <b-button :variant="salesRangeBtn('year')"  size="sm" @click="applySalesRange('year')">Year</b-button>
+              </div>
+            </div>
+
+            <div class="flex-grow-1 mr-3 mb-2">
+              <b-form @submit.prevent="loadSales">
+                <b-row>
+                  <b-col md="5" class="mb-2">
+                    <b-form-group label="Start Date">
+                      <b-form-input type="date" v-model="salesFilter.start_date" required />
+                    </b-form-group>
+                  </b-col>
+                  <b-col md="5" class="mb-2">
+                    <b-form-group label="End Date">
+                      <b-form-input type="date" v-model="salesFilter.end_date" required />
+                    </b-form-group>
+                  </b-col>
+                  <b-col md="2" class="mb-2 d-flex align-items-end">
+                    <b-button type="submit" variant="primary" block>
+                      <i class="fas fa-search mr-1"></i> Go
+                    </b-button>
+                  </b-col>
+                </b-row>
+                <small class="text-muted">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Period: {{ prettyDate(salesFilter.start_date) }} to {{ prettyDate(salesFilter.end_date) }}
+                </small>
+              </b-form>
+            </div>
+
+            <div class="mb-2">
+              <b-button size="sm" variant="outline-secondary" @click="loadSales">
+                <i class="fas fa-sync mr-1"></i> Refresh
+              </b-button>
+            </div>
+          </div>
         </b-card>
 
         <!-- Summary Cards -->
@@ -606,20 +651,26 @@ export default {
     const ymd = (d) =>
       `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`;
 
-    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    // default ranges: dashboard = current month; sales = current month
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     return {
-      activeTab: "Dashboard",
-
+      activeTabIndex: 0, // 0=Dashboard,1=Stock,2=Sales
       loading: false,
+
+      // Range state (Dashboard)
+      dashboardQuickRange: "month", // day|week|month|year
+      dashboardRange: {
+        start_date: ymd(startOfMonth),
+        end_date: ymd(today),
+      },
 
       // Dashboard dataset
       dashboard: {
-        // expected fields:
-        // patients_count, patients_this_month, sales_total, sales_this_month, low_stock_count,
-        // active_prescriptions_count, expiring_soon_count, expired_count,
-        // todays_sales_total, todays_sales_count, todays_patients_count, todays_prescriptions_count,
-        // active_doctors_count, drugs_count,
+        // may include:
+        // patients_count, patients_in_range, sales_total, sales_in_range, transactions_in_range,
+        // low_stock_count, active_prescriptions_count, expiring_soon_count, expired_count,
+        // prescriptions_in_range, active_doctors_count, drugs_count,
         // recent_patients: [], recent_sales: []
       },
 
@@ -633,20 +684,20 @@ export default {
         total_drugs: 0,
         categories_count: 0,
         expired_count: 0,
-        by_category: [], // [{ category, value, items }]
-        status_counts: [] // [{ key, title, count, classText, classBadge, classBar }]
+        by_category: [],
+        status_counts: []
       },
 
-      // Sales dataset
+      // Sales dataset + filters
       sales: {
         rows: [],
         total_revenue: 0,
         transactions_count: 0,
         top_payment_method: null
       },
-
+      salesQuickRange: "month",
       salesFilter: {
-        start_date: ymd(start),
+        start_date: ymd(startOfMonth),
         end_date: ymd(today)
       }
     };
@@ -669,11 +720,101 @@ export default {
     }
   },
   methods: {
+    // ========= Range helpers =========
+    ymd(d) {
+      return `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`;
+    },
+    startOfWeek(d) {
+      const day = d.getDay(); // 0 Sun - 6 Sat
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+      return new Date(d.setDate(diff));
+    },
+    endOfWeek(d) {
+      const start = this.startOfWeek(new Date(d));
+      return new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+    },
+    startOfMonth(d) {
+      return new Date(d.getFullYear(), d.getMonth(), 1);
+    },
+    endOfMonth(d) {
+      return new Date(d.getFullYear(), d.getMonth() + 1, 0);
+    },
+    startOfYear(d) {
+      return new Date(d.getFullYear(), 0, 1);
+    },
+    endOfYear(d) {
+      return new Date(d.getFullYear(), 11, 31);
+    },
+
+    // ===== Dashboard Ranges =====
+    applyRange(kind) {
+      this.dashboardQuickRange = kind;
+      const today = new Date();
+      let start, end;
+
+      if (kind === "day") {
+        start = new Date(today);
+        end = new Date(today);
+      } else if (kind === "week") {
+        start = this.startOfWeek(new Date(today));
+        end = this.endOfWeek(new Date(today));
+      } else if (kind === "month") {
+        start = this.startOfMonth(new Date(today));
+        end = this.endOfMonth(new Date(today));
+      } else {
+        start = this.startOfYear(new Date(today));
+        end = this.endOfYear(new Date(today));
+      }
+
+      this.dashboardRange.start_date = this.ymd(start);
+      this.dashboardRange.end_date = this.ymd(end);
+      this.loadDashboard();
+    },
+    rangeBtnVariant(kind) {
+      return this.dashboardQuickRange === kind ? "primary" : "outline-secondary";
+    },
+    onDashboardDatesChanged() {
+      // When custom date changed manually, unset the quick-range highlight
+      this.dashboardQuickRange = "custom";
+    },
+
+    // ===== Sales Ranges =====
+    applySalesRange(kind) {
+      this.salesQuickRange = kind;
+      const today = new Date();
+      let start, end;
+
+      if (kind === "day") {
+        start = new Date(today);
+        end = new Date(today);
+      } else if (kind === "week") {
+        start = this.startOfWeek(new Date(today));
+        end = this.endOfWeek(new Date(today));
+      } else if (kind === "month") {
+        start = this.startOfMonth(new Date(today));
+        end = this.endOfMonth(new Date(today));
+      } else {
+        start = this.startOfYear(new Date(today));
+        end = this.endOfYear(new Date(today));
+      }
+
+      this.salesFilter.start_date = this.ymd(start);
+      this.salesFilter.end_date = this.ymd(end);
+      this.loadSales();
+    },
+    salesRangeBtn(kind) {
+      return this.salesQuickRange === kind ? "primary" : "outline-secondary";
+    },
+
     // ===== API LOADERS =====
     loadDashboard() {
       this.loading = true;
+      const params = {
+        start_date: this.dashboardRange.start_date,
+        end_date: this.dashboardRange.end_date
+      };
       return this.$axios
-        .get(this.$base_url + "reports", authHeader())
+        .get(this.$base_url + "reports", { ...authHeader(), params })
         .then(({ data }) => {
           this.dashboard = (data && data.data) || {};
         })
@@ -698,7 +839,6 @@ export default {
         .get(this.$base_url + "reports/stock", authHeader())
         .then(({ data }) => {
           const payload = (data && data.data) || {};
-          // Normalize
           this.stock.drugs = payload.drugs || [];
           this.stock.critical_low_count = payload.critical_low_count || 0;
           this.stock.low_stock_count = payload.low_stock_count || 0;
@@ -708,7 +848,7 @@ export default {
           this.stock.categories_count = payload.categories_count || 0;
           this.stock.expired_count = payload.expired_count || 0;
           this.stock.by_category = payload.by_category || [];
-          // Build status counts if not provided
+
           if (payload.status_counts) {
             this.stock.status_counts = payload.status_counts;
           } else {
@@ -850,7 +990,6 @@ export default {
     },
 
     exportStockCSV() {
-      // Build CSV from current stock table rows
       const table = this.$refs.stockTable;
       if (!table) return;
 
@@ -908,6 +1047,15 @@ export default {
 .page-title { margin-bottom: 12px; }
 .table td, .table th { vertical-align: middle; }
 .fs-6 { font-size: 1rem; }
+
+/* Range bar */
+.range-bar {
+  padding: 10px 12px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 10px;
+}
+.date-pickers .form-control { min-width: 160px; }
 
 /* Print-friendly */
 @media print {

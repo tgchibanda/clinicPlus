@@ -11,14 +11,13 @@ class Patient extends Model
 
     protected $fillable = [
         'first_name', 'last_name', 'phone', 'email', 'date_of_birth',
-        'gender', 'address', 'emergency_contact', 'payment_method',
-        'voucher_code', 'payment_amount', 'assigned_doctor_id', 'status', 'user_id'
+        'gender', 'address', 'emergency_contact',
+        'voucher_code', 'assigned_doctor_id', 'status', 'user_id'
     ];
 
     protected $casts = [
         'date_of_birth' => 'date',
-        'visit_date' => 'datetime',
-        'payment_amount' => 'decimal:2'
+        'visit_date' => 'datetime'
     ];
 
     public function doctor()

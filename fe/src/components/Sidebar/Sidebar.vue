@@ -113,10 +113,18 @@
         v-if="userRole.status == 'active' && userRole.role == 'admin'"
       >
            
+        <NavLink
+          :activeItem="activeItem"
+          header="Dashboard"
+          link="/app/reports"
+          iconName="flaticon-home"
+          index="dashboard"
+          isHeader
+        />
 
         <NavLink
             :activeItem="activeItem"
-            header="Walk In Patients"
+            header="Patients"
             link="/app/walkinpatients"
             iconName="flaticon-compass"
             index="walkinpatients"
@@ -134,84 +142,13 @@
 
         <NavLink
             :activeItem="activeItem"
-            header="Prescriptions"
+            header="Prescription Payments"
             link="/app/prescriptions"
             iconName="flaticon-compass"
             index="prescriptions"
             isHeader
           />
-
-        <NavLink
-            :activeItem="activeItem"
-            header="Sales"
-            link="/app/sales"
-            iconName="flaticon-compass"
-            index="sales"
-            isHeader
-          />
-
-        <NavLink
-            :activeItem="activeItem"
-            header="Reports"
-            link="/app/reports"
-            iconName="flaticon-compass"
-            index="reports"
-            isHeader
-          />
-
-
-        <NavLink
-          :activeItem="activeItem"
-          header="Dashboard"
-          link="/app/dashboard"
-          iconName="flaticon-home"
-          index="dashboard"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Users"
-          link="/app/users"
-          iconName="flaticon-user-4"
-          index="users"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Payouts"
-          link="/app/payouts"
-          iconName="flaticon-database-1"
-          index="payouts"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="My Account"
-          link="/app/account"
-          iconName="flaticon-user"
-          index="account"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Reports"
-          link="/app/reports"
-          iconName="flaticon-network"
-          index="reports"
-          :childrenLinks="[
-            { header: 'Payments', link: '/app/reports/PaymentReport' },
-            { header: 'Consultation', link: '/app/reports/ConsultationReport' },
-            { header: 'Payouts', link: '/app/reports/PayoutReport' },
-          ]"
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Feedback"
-          link="/app/feedback"
-          iconName="flaticon-compass"
-          index="feedback"
-          isHeader
-        />
+        
         <NavLink
           :activeItem="activeItem"
           header="Condition of the month"
@@ -220,6 +157,16 @@
           index="condition"
           isHeader
         />
+
+        <NavLink
+          :activeItem="activeItem"
+          header="Users"
+          link="/app/users"
+          iconName="flaticon-user-4"
+          index="users"
+          isHeader
+        />
+        
         <NavLink
           :activeItem="activeItem"
           header="Directory"

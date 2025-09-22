@@ -4,7 +4,7 @@ namespace App\Domains;
 
 use App\Models\PatientDetail;
 
-class Patient
+class PatientDetails
 {
     public function getPatient($id)
     {

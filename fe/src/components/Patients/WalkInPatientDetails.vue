@@ -109,18 +109,7 @@
         </b-form-invalid-feedback>
       </b-form-group>
 
-      <b-form-group label="Payment method *">
-        <b-form-select
-          v-model="user.payment_method"
-          :state="'payment_method' in errors ? false : null"
-        >
-          <option value="" selected>Choose payment method</option>
-          <option value="Cash">Cash</option>
-        </b-form-select>
-        <b-form-invalid-feedback>
-          {{ "payment_method" in errors ? errors.payment_method[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
+      
 
       <b-button block type="submit" variant="primary">Submit</b-button>
     </b-form>
@@ -144,7 +133,6 @@ export default {
         email: "",
         phone_number: "",
         address: "",
-        payment_method: "",
         emergency_contact_number: "",
         user_id: JSON.parse(localStorage.getItem("user")).user_id,
       },
