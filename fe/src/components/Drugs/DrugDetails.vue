@@ -1,212 +1,247 @@
 <template>
   <div>
     <b-form @submit.prevent="handleSubmit">
+      <!-- Top error -->
       <b-alert class="alert-sm" variant="danger" :show="!!errorMessage">
         {{ errorMessage }}
       </b-alert>
-      <b-form-group label="First Name *">
+
+      <!-- Name -->
+      <b-form-group label="Drug Name *">
         <b-form-input
-          type="text"
-          v-model="user.first_name"
-          placeholder="Enter First Name"
-          :state="'first_name' in errors ? false : null"
-        >
-        </b-form-input>
+          v-model.trim="form.name"
+          placeholder="e.g., Amoxicillin 500mg"
+          :state="fieldState('name')"
+          required
+        />
         <b-form-invalid-feedback>
-          {{ "first_name" in errors ? errors.first_name[0] : true }}
+          {{ firstError('name') }}
         </b-form-invalid-feedback>
       </b-form-group>
 
-      <b-form-group label="Last Name *">
-        <b-form-input
-          type="text"
-          v-model="user.last_name"
-          placeholder="Enter Last Name"
-          :state="'last_name' in errors ? false : null"
-        >
-        </b-form-input>
+      <!-- Category + Unit -->
+      <div class="form-row">
+        <div class="col-md-6">
+          <b-form-group label="Category">
+            <b-form-input
+              v-model.trim="form.category"
+              placeholder="e.g., Antibiotic"
+              :state="fieldState('category')"
+            />
+            <b-form-invalid-feedback>
+              {{ firstError('category') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+        <div class="col-md-6">
+          <b-form-group label="Unit *">
+            <b-form-input
+              v-model.trim="form.unit"
+              placeholder="e.g., tablet, bottle, ml"
+              :state="fieldState('unit')"
+              required
+            />
+            <b-form-invalid-feedback>
+              {{ firstError('unit') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+
+
+
+      </div>
+
+      <!-- Prices -->
+      <div class="form-row">
+        <div class="col-md-4">
+          <b-form-group label="Batch Number *">
+            <b-input-group>
+              <b-form-input
+                type="text"
+                v-model.number="form.batch_number"
+                :state="fieldState('batch_number')"
+                required
+              />
+            </b-input-group>
+            <b-form-invalid-feedback>
+              {{ firstError('batch_number') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+        
+        <div class="col-md-4">
+          <b-form-group label="Selling Price *">
+            <b-input-group>
+              <b-input-group-prepend is-text>$</b-input-group-prepend>
+              <b-form-input
+                type="number"
+                step="0.01"
+                min="0"
+                v-model.number="form.selling_price"
+                placeholder="0.00"
+                :state="fieldState('selling_price')"
+                required
+              />
+            </b-input-group>
+            <b-form-invalid-feedback>
+              {{ firstError('selling_price') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+
+        <div class="col-md-4">
+          <b-form-group label="Stock Quantity *">
+            <b-form-input
+              type="text"
+              v-model.number="form.stock_quantity"
+              placeholder="e.g., 100"
+              :state="fieldState('stock_quantity')"
+              required
+            />
+            <b-form-invalid-feedback>
+              {{ firstError('stock_quantity') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+
+      </div>
+
+      <!-- Stock -->
+      <div class="form-row">
+        <div class="col-md-6">
+          <b-form-group label="Minimum Stock Level *">
+            <b-form-input
+              type="text"
+              v-model.number="form.minimum_stock_level"
+              placeholder="e.g., 10"
+              :state="fieldState('minimum_stock_level')"
+              required
+            />
+            <b-form-invalid-feedback>
+              {{ firstError('minimum_stock_level') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+        <div class="col-md-6">
+          <b-form-group label="Expiry Date">
+            <b-form-datepicker
+              v-model="form.expiry_date"
+              placeholder="YYYY-MM-DD"
+              :state="fieldState('expiry_date')"
+            />
+            <b-form-invalid-feedback>
+              {{ firstError('expiry_date') }}
+            </b-form-invalid-feedback>
+          </b-form-group>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <b-form-group label="Description">
+        <b-form-textarea
+          v-model.trim="form.description"
+          placeholder="Basic use of the medication…"
+          rows="3"
+          max-rows="6"
+          :state="fieldState('description')"
+        />
         <b-form-invalid-feedback>
-          {{ "last_name" in errors ? errors.last_name[0] : true }}
+          {{ firstError('description') }}
         </b-form-invalid-feedback>
       </b-form-group>
 
-      <b-form-group label="Email Address">
-        <b-form-input
-          type="email"
-          v-model="user.email"
-          placeholder="Enter email address"
-          :state="'email' in errors ? false : null"
-        >
-        </b-form-input>
-        <b-form-invalid-feedback>
-          {{ "email" in errors ? errors.email[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Phone *">
-        <b-form-input
-          type="number"
-          v-model="user.phone_number"
-          placeholder="Enter phone number"
-          :state="'phone_number' in errors ? false : null"
-        >
-        </b-form-input>
-        <b-form-invalid-feedback>
-          {{ "phone_number" in errors ? errors.phone_number[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Date of birth *">
-        <b-form-datepicker
-          id="example-datepicker"
-          v-model="user.dob"
-          class="mb-2"
-          placeholder="Enter date of birth"
-          :state="'dob' in errors ? false : null"
-        ></b-form-datepicker>
-        <b-form-invalid-feedback>
-          {{ "dob" in errors ? errors.dob[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Gender *">
-        <b-form-select
-          v-model="user.gender"
-          :state="'gender' in errors ? false : null"
-        >
-          <option value="" selected>Choose gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </b-form-select>
-        <b-form-invalid-feedback>
-          {{ "gender" in errors ? errors.gender[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Address *">
-        <b-form-input
-          v-model="user.address"
-          type="text"
-          placeholder="Enter Address"
-          :state="'address' in errors ? false : null"
-        >
-        </b-form-input>
-        <b-form-invalid-feedback>
-          {{ "address" in errors ? errors.address[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Emergency contact number *">
-        <b-form-input
-          v-model="user.emergency_contact_number"
-          type="text"
-          placeholder="Enter emergency contact number"
-          :state="'emergency_contact_number' in errors ? false : null"
-        >
-        </b-form-input>
-        <b-form-invalid-feedback>
-          {{ "emergency_contact_number" in errors ? errors.emergency_contact_number[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group label="Payment method *">
-        <b-form-select
-          v-model="user.payment_method"
-          :state="'payment_method' in errors ? false : null"
-        >
-          <option value="" selected>Choose payment method</option>
-          <option value="Cash">Cash</option>
-        </b-form-select>
-        <b-form-invalid-feedback>
-          {{ "payment_method" in errors ? errors.payment_method[0] : true }}
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-button block type="submit" variant="primary">Submit</b-button>
+      <b-button block type="submit" variant="primary" :disabled="submitting">
+        <b-spinner small v-if="submitting" class="mr-2" /> Save Drug
+      </b-button>
     </b-form>
   </div>
 </template>
 
 <script>
 import authHeader from "../../services/auth-header";
+
 export default {
-  name: "DrugDetails",
+  name: "DrugCreateModal",
   data() {
     return {
+      submitting: false,
       errorMessage: null,
-      loading: false,
       errors: {},
-      currentUser: {},
-      user_id: JSON.parse(localStorage.getItem("user")).user_id,
-      user: {
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone_number: "",
-        address: "",
-        payment_method: "",
-        emergency_contact_number: "",
-        user_id: JSON.parse(localStorage.getItem("user")).user_id,
+      form: {
+        name: "",
+        category: "",
+        unit: "",
+        batch_number: "",
+        selling_price: "",
+        stock_quantity: "",
+        minimum_stock_level: "",
+        expiry_date: null,  // "YYYY-MM-DD"
+        description: "",
       },
     };
   },
   methods: {
+    fieldState(field) {
+      return field in this.errors ? false : null;
+    },
+    firstError(field) {
+      return this.errors?.[field]?.[0] || true;
+    },
     handleSubmit() {
-      this.loading = true;
+      this.submitting = true;
+      this.errorMessage = null;
+      this.errors = {};
+
+      // Build payload exactly as backend expects
+      const payload = {
+        name: this.form.name,
+        category: this.form.category || null,
+        unit: this.form.unit,
+        batch_number: this.form.batch_number,
+        selling_price: this.form.selling_price,
+        stock_quantity: this.form.stock_quantity,
+        minimum_stock_level: this.form.minimum_stock_level,
+        expiry_date: this.form.expiry_date, // keep as YYYY-MM-DD string or null
+        description: this.form.description || null,
+      };
+
       this.$axios
-        .post(this.$base_url + "walk_in_patient_details", this.user, authHeader())
-        .then((response) => {
-          this.$swal("Success!", response.message, "success");
-          Fire.$emit("closeModalPatient");
+        .post(this.$base_url + "drugs", payload, authHeader())
+        .then(({ data }) => {
+          // Notify parent to refresh table and close modal
+          this.$emit("saved", data?.data || null);
           this.resetForm();
+          this.submitting = false;
+          this.$bvToast?.toast("Drug created successfully.", {
+            title: "Success",
+            variant: "success",
+            autoHideDelay: 3000,
+          });
         })
         .catch((error) => {
-          this.message =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString();
-          this.errorMessage = this.message;
-          this.errors = error.response.data.errors;
-          // this.$swal("error!", "There was an error" + error, "error");
+          this.submitting = false;
+          this.errorMessage =
+            error?.response?.data?.message ||
+            error?.message ||
+            "An error occurred";
+          this.errors = error?.response?.data?.errors || {};
         });
     },
     resetForm() {
-      this.user.fullname = "";
-      this.user.email = "";
-      this.user.mobile = "";
-      this.user.city = "";
-      this.user.unit_number = "";
-      this.user.street_name = "";
-      this.user.surburb = "";
-      this.user.gps = "";
+      this.form = {
+        name: "",
+        category: "",
+        unit: "",
+        batch_number: "",
+        stock_quantity: "",
+        minimum_stock_level: "",
+        expiry_date: null,
+        description: "",
+        selling_price: null,
+      };
+      this.errors = {};
+      this.errorMessage = null;
     },
-    loadCurrentUser() {
-      this.$axios
-        .get(this.$base_url + "contact/" + this.user_id, authHeader())
-        .then(({ data }) => {
-          this.currentUser = JSON.parse(data.data);
-          this.user.fullname = this.currentUser.fullname;
-          this.user.email = "";
-          this.user.mobile = "s";
-          this.user.city = "";
-          this.user.unit_number = "";
-          this.user.street_name = "";
-          this.user.surburb = "";
-          this.user.gps = "";
-        });
-    },
-    closeModal() {
-      this.$refs["modal-consultation"].hide();
-      this.loadPatients();
-    },
-  },
-  created() {
-    Fire.$on("closeModalPatient", () => {
-      this.closeModal();
-    });
-    // this.loadCurrentUser();
   },
 };
 </script>

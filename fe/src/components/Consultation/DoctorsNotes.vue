@@ -4,128 +4,146 @@
       <b-alert class="alert-sm" variant="danger" :show="!!errorMessage">
         {{ errorMessage }}
       </b-alert>
-      <h4>Doctors notes for {{ this.consultation.fullname }}</h4>
+
+      <h4>Doctor’s notes for {{ patientName }}</h4>
+
       <b-form-group label="Examination *">
         <b-form-textarea
-          v-model="consultationObject.examination"
-          id="textarea"
-          placeholder="Enter reason for Examination"
+          v-model.trim="form.examination"
+          placeholder="Enter examination findings"
           rows="3"
           max-rows="6"
           :state="'examination' in errors ? false : null"
-        ></b-form-textarea>
+        />
         <b-form-invalid-feedback>
-          {{
-            "examination" in errors
-              ? errors.examination[0]
-              : true
-          }}
+          {{ errors.examination ? errors.examination[0] : true }}
         </b-form-invalid-feedback>
       </b-form-group>
 
       <b-form-group label="Diagnosis">
         <b-form-textarea
-          v-model="consultationObject.diagnosis"
-          id="textarea"
-          placeholder="Enter reason for Diagnosis"
+          v-model.trim="form.diagnosis"
+          placeholder="Enter diagnosis"
           rows="3"
           max-rows="6"
           :state="'diagnosis' in errors ? false : null"
-        ></b-form-textarea>
+        />
         <b-form-invalid-feedback>
-          {{ "diagnosis" in errors ? errors.diagnosis[0] : true }}
+          {{ errors.diagnosis ? errors.diagnosis[0] : true }}
         </b-form-invalid-feedback>
       </b-form-group>
 
       <b-form-group label="Investigation">
         <b-form-textarea
-          v-model="consultationObject.investigation"
-          id="textarea"
-          placeholder="Enter reason for investigation"
+          v-model.trim="form.investigation"
+          placeholder="Enter investigations"
           rows="3"
           max-rows="6"
           :state="'investigation' in errors ? false : null"
-        ></b-form-textarea>
+        />
         <b-form-invalid-feedback>
-          {{ "investigation" in errors ? errors.investigation[0] : true }}
+          {{ errors.investigation ? errors.investigation[0] : true }}
         </b-form-invalid-feedback>
       </b-form-group>
 
       <b-form-group label="Management">
         <b-form-textarea
-          v-model="consultationObject.management"
-          id="textarea"
-          placeholder="Enter Management"
+          v-model.trim="form.management"
+          placeholder="Enter management plan"
           rows="3"
           max-rows="6"
           :state="'management' in errors ? false : null"
-        ></b-form-textarea>
+        />
         <b-form-invalid-feedback>
-          {{ "management" in errors ? errors.management[0] : true }}
+          {{ errors.management ? errors.management[0] : true }}
         </b-form-invalid-feedback>
       </b-form-group>
-      <b-form-group   label="Generate forms">
-        <b-form-checkbox-group v-model="consultationObject.request_forms">
-          <b-form-checkbox value="pathology">Generate Pathology Form</b-form-checkbox>
-          <b-form-checkbox value="radiology">Generate Radiology Form</b-form-checkbox>
-          <b-form-checkbox value="script">Generate Script Pad</b-form-checkbox>
-          <b-form-checkbox value="allied">Allied Health Form</b-form-checkbox>
-          <b-form-checkbox value="specialist">Specialist Referral</b-form-checkbox>
-          <b-form-checkbox value="imaging">Imaging Request Form</b-form-checkbox>
-        </b-form-checkbox-group>
-      </b-form-group>
-      <b-button block type="submit" variant="primary">Submit</b-button>
+
+      <b-button block type="submit" variant="primary" :disabled="submitting">
+        <b-spinner small v-if="submitting" class="mr-2" /> Submit
+      </b-button>
     </b-form>
   </div>
 </template>
 
 <script>
 import authHeader from "../../services/auth-header";
+
 export default {
   name: "DoctorsNotes",
   props: {
-    consultation: Object,
+    consultation: { type: Object, required: true },
+    // optional for header display
+    patientDetails: { type: Object, default: () => ({}) },
   },
   data() {
     return {
+      submitting: false,
       errorMessage: null,
-      loading: false,
       errors: {},
-      currentUser: {},
-      user_id: JSON.parse(localStorage.getItem("user")).user_id,
-      consultationObject: {
+      form: {
         examination: "",
         diagnosis: "",
         investigation: "",
         management: "",
-        consultation_id: this.consultation.consultation_id,
-        request_forms: []
       },
     };
   },
-  methods: {
-    handleSubmit() {
-      this.loading = true;
-      this.$axios
-        .post(this.$base_url + "doctors_notes", this.consultationObject, authHeader())
-        .then((response) => {
-          Fire.$emit("closeModalDoctorNotes", this.consultationObject);
-        })
-        .catch((error) => {
-          this.message =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString();
-          this.errorMessage = this.message;
-          this.errors = error.response.data.errors;
-        });
+  computed: {
+    consultationId() {
+      return this.consultation?.id;
+    },
+    patientName() {
+      const f = this.patientDetails?.first_name || "";
+      return f || "patient";
     },
   },
-  created() {
-    this.isLoading = true;
-    // this.loadCurrentUser();
+  methods: {
+    handleSubmit() {
+      this.errorMessage = null;
+      this.errors = {};
+
+      if (!this.consultationId) {
+        this.errorMessage = "Missing consultation reference.";
+        return;
+      }
+      if (!this.form.examination?.trim()) {
+        this.errors = { examination: ["Examination is required"] };
+        return;
+      }
+
+      const payload = {
+        consultation_id: this.consultationId,
+        examination: this.form.examination,
+        diagnosis: this.form.diagnosis || null,
+        investigation: this.form.investigation || null,
+        management: this.form.management || null,
+      };
+
+      this.submitting = true;
+      this.$axios
+        .post(this.$base_url + "doctors_notes", payload, authHeader())
+        .then(({ data }) => {
+          // emit both via event bus (to match your existing handler) and a component event
+          const returned = data?.data || payload;
+          if (window.Fire) {
+            Fire.$emit("closeModalDoctorNotes", returned);
+          }
+          this.$emit("saved", returned);
+        })
+        .catch((error) => {
+          const msg =
+            error?.response?.data?.message ||
+            error?.message ||
+            error?.toString() ||
+            "Failed to save notes";
+          this.errorMessage = msg;
+          this.errors = error?.response?.data?.errors || {};
+        })
+        .finally(() => {
+          this.submitting = false;
+        });
+    },
   },
 };
 </script>

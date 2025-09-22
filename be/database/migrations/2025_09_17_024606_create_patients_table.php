@@ -27,7 +27,7 @@ class CreatePatientsTable extends Migration
             $table->string('voucher_code')->nullable();
             $table->decimal('payment_amount', 10, 2)->default(0);
             $table->unsignedBigInteger('assigned_doctor_id')->nullable();
-            $table->enum('status', ['waiting', 'consulting', 'completed'])->default('waiting');
+            $table->enum('status', ['waiting','booked', 'consulting', 'completed'])->default('waiting');
             $table->timestamp('visit_date')->useCurrent();
             $table->timestamps();
             

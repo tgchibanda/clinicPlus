@@ -75,4 +75,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Upload::class)
             ->withTimeStamps();
     }
+    // app/Models/User.php
+    public function location()
+    {
+        return $this->belongsTo(\App\Models\Location::class);
+    }
 }

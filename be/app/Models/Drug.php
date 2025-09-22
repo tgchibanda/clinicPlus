@@ -10,7 +10,7 @@ class Drug extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'description', 'category', 'selling_price',
+        'name', 'description', 'category', 'selling_price', 'batch_number',
         'stock_quantity', 'minimum_stock_level', 'unit', 'expiry_date'
     ];
 
