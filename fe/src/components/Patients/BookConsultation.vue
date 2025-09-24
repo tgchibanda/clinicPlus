@@ -357,6 +357,7 @@ export default {
         time: timeStr,
         start_at: startAt,
         end_at: endAt,
+        payment_method: this.form.payment_method,
         past_medical_history: this.form.past_medical_history,
         reason: this.form.reason,
         instruction: this.form.instruction,
