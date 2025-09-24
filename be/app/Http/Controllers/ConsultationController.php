@@ -104,7 +104,7 @@ class ConsultationController extends Controller
             'end_at'      => $end,
             'status'      => 0, // pending
             'consultation_fee' => $validated['consultation_fee'] ?? null,
-            'payment_method' => $request['payment_method']
+            'payment_method' => $validated['payment_method']
         ]);
 
         if (!empty($validated['past_medical_history'])) {

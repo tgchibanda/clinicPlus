@@ -9,11 +9,20 @@
     />
 
     <Widget
-      title="<h5>My <span class='fw-semi-bold'>Patients</span></h5>"
-      bodyClass="widget-table-overflow"
-      customHeader
-      :fetchingData="loading"
-    >
+        title="<h5>My <span class='fw-semi-bold'>Patients</span></h5>"
+        bodyClass="widget-table-overflow"
+        customHeader
+        :fetchingData="loading"
+      >
+        <!-- Overlaid top-right button (same place as before) -->
+        <b-button
+          v-b-modal.modal-new-walk-in-patient
+          variant="primary"
+          class="modal-button"
+        >
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          Add New Patient
+        </b-button>
       <!-- Toolbar -->
       <div class="toolbar d-flex flex-wrap align-items-center mb-3">
         <!-- Search -->
@@ -357,6 +366,18 @@ export default {
 
 <style scoped>
 /* Toolbar padding + layout (kept to match your prescriptions page) */
+.widget-wrap {
+  position: relative;
+}
+
+/* Put the button back in the header’s top-right corner */
+.modal-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  font-size: 0.875rem;
+}
 .toolbar {
   padding: 14px 16px;
   background: #fafafa;

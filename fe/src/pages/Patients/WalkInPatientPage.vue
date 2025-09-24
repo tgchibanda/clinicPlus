@@ -663,7 +663,7 @@ loadPatient(id) {
       this.submitting = true;
       var payload = {
         patient_id: this.patientDetails.id,
-        consultation_id: this.activeConsultation.id,
+        consultation_id: this.activeConsultation,
         doctor_id: this.user_id,
         notes: this.prescription.notes,
         drugs: this.prescription.drugs.map(function (d) {
