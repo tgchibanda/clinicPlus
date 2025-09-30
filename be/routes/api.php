@@ -6,6 +6,7 @@ use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\InsurancePublicController;
 use App\Http\Controllers\ConsultationController;
 
 /*
@@ -22,6 +23,12 @@ Route::get('oauth/{driver}', 'Auth\LoginController@redirectToProvider');
 Route::get('oauth/{driver}/callback', 'Auth\LoginController@handleProviderCallback');
 Route::post('password/email', 'Auth\ForgotPasswordController@forgot')->name('password.reset');
 Route::post('password/reset', 'Auth\ForgotPasswordController@reset');
+
+
+Route::post('/public-signup', [InsurancePublicController::class, 'publicSignup']);
+Route::get('/plans', [InsurancePublicController::class, 'getPlans']);
+Route::post('/verify-patient', [InsurancePublicController::class, 'verifyPatient']);
+
 
 Route::middleware('auth:api')->middleware('cors')->group(function () {
 
@@ -52,6 +59,18 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::get('/getPayouts', ['uses' => 'PayoutController@getPayouts']);
     Route::get('/getMonthlyCondition', ['uses' => 'MonthlyConditionController@getMonthlyCondition']);
     Route::get('/dashboard/{id}/{account_type}', ['uses' => 'DashboardController@getData']);
+
+    // Subscription management
+    Route::get('/subscriptions', [InsuranceSubscriptionController::class, 'index']);
+    Route::get('/subscriptions/{id}', [InsuranceSubscriptionController::class, 'show']);
+    Route::patch('/subscriptions/{id}', [InsuranceSubscriptionController::class, 'update']);
+    Route::post('/subscriptions/{id}/close', [InsuranceSubscriptionController::class, 'close']);
+    Route::post('/subscriptions/{id}/payments', [InsuranceSubscriptionController::class, 'addPayment']);
+    
+    // Reports
+    Route::get('/reports/subscriptions', [InsuranceReportController::class, 'subscriptions']);
+    Route::get('/reports/payments', [InsuranceReportController::class, 'payments']);
+    Route::get('/reports/export', [InsuranceReportController::class, 'export']);
 
     // Consultations
     

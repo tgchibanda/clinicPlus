@@ -5,6 +5,7 @@ import Layout from '@/components/Layout/Layout';
 import Login from '@/pages/Login/Login';
 import Privacy from '@/pages/Login/Privacy';
 import LoginCallback from '@/pages/Login/LoginCallback';
+import InsuranceJoin from '@/pages/Insurance/InsuranceJoin';
 import Register from '@/pages/Login/Register';
 import ForgotPassword from '@/pages/Login/ForgotPassword';
 import ResetPassword from '@/pages/Login/ResetPassword';
@@ -80,6 +81,11 @@ export default new Router({
       path: '/reset-password/:token',
       name: 'Reset',
       component: ResetPassword,
+    },
+    {
+      path: '/public-signup',
+      name: 'InsuranceJoin',
+      component: InsuranceJoin,
     },
     {
       path: '/register',
