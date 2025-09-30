@@ -113,15 +113,10 @@
                 <div class="small text-muted" v-if="dep.date_of_birth">Age: {{ calcAge(dep.date_of_birth) }}</div>
               </div>
 
-              <div class="form-group col-md-6">
-                <label class="small">Gender</label>
-                <select class="form-control" v-model="dep.gender">
-                  <option value="">Select</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+              <b-form-group label="Gender" label-class="small" class="col-md-6">
+  <b-form-select v-model="dep.gender" :options="genderOptions" class="gender-select"/>
+</b-form-group>
+
             </div>
 
             <div class="form-group">
@@ -164,55 +159,113 @@
 
         <!-- Step 3: Review & submit -->
         <div v-if="currentStep === 3">
-          <h6>Review & Payment</h6>
+          <h6 class="mb-3">Review & Payment</h6>
 
-          <div class="border rounded p-3 mb-3">
-            <div><strong>Owner</strong></div>
-            <div class="small text-muted">{{ selected ? (selected.first_name + ' ' + selected.last_name) : '' }}</div>
-            <div class="small text-muted">Phone: {{ selected ? selected.phone : '' }}</div>
-            <div class="mt-2">Plan: <strong>{{ ownerPlanName }}</strong> • ${{ ownerPrice }}/mo</div>
-          </div>
+          <!-- Owner card -->
+          <b-card class="mb-3 owner-card">
+            <div class="d-flex flex-wrap align-items-center justify-content-between">
+              <div class="owner-info">
+                <div class="h5 mb-1">{{ selected ? (selected.first_name + ' ' + selected.last_name) : '—' }}</div>
+                <div class="small text-muted mb-1">Phone: {{ selected ? selected.phone : '—' }}</div>
+                <div class="small text-muted">DOB: {{ selected ? selected.date_of_birth : '—' }}</div>
+              </div>
 
-          <div v-if="enrollment.dependents.length" class="border rounded p-3 mb-3">
-            <div><strong>Dependents</strong></div>
-            <div v-for="(d, i) in enrollment.dependents" :key="'rev' + i" class="mt-2 p-2 border rounded">
-              <div>{{ d.first_name }} {{ d.last_name }} — Age: {{ calcAge(d.date_of_birth) }}</div>
-              <div class="small text-muted">Plan: {{ getPlanName(d.plan_id) }} — ${{ depPrice(d) }}/mo</div>
+              <div class="text-right owner-plan">
+                <div class="small text-muted">Plan</div>
+                <div class="font-weight-bold">{{ ownerPlanName }}</div>
+                <div class="text-success">${{ ownerPrice }}/mo</div>
+                <div class="mt-2">
+                  <b-badge variant="primary">{{ ownerPlanName }}</b-badge>
+                </div>
+              </div>
+            </div>
+          </b-card>
+
+          <!-- Dependents -->
+          <div v-if="enrollment.dependents.length" class="mb-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <div><strong>Dependents ({{ enrollment.dependents.length }})</strong></div>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+              <b-card
+                v-for="(d, i) in enrollment.dependents"
+                :key="'rev'+i"
+                class="mb-2 dependent-card p-3"
+              >
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="dependent-left">
+                    <div class="font-weight-bold">{{ d.first_name }} {{ d.last_name }}</div>
+                    <div class="small text-muted">Age: {{ calcAge(d.date_of_birth) }} • Gender: {{ d.gender || '—' }}</div>
+                    <div class="small text-muted">Relationship: {{ d.relationship || '—' }}</div>
+                  </div>
+
+                  
+                  <div class="text-right dependent-right">
+                    <div class="small text-muted">Plan</div>
+                    <div class="font-weight-bold">{{ getPlanName(d.plan_id) }}</div>
+                    <div class="text-success">${{ depPrice(d) }}/mo</div>
+                    <div class="mt-2">
+                      <b-badge variant="info">{{ getPlanName(d.plan_id) }}</b-badge>
+                    </div>
+                  </div>
+                </div>
+              </b-card>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="small">Payment method</label>
-            <select class="form-control" v-model="enrollment.payment_method">
-              <option value="">Select</option>
-              <option v-for="m in paymentMethods" :key="m.value" :value="m.value">{{ m.label }}</option>
-            </select>
-          </div>
+          <!-- Payment method -->
+          <b-form-group label="Payment method" class="mb-3">
+            <b-form-select
+              v-model="enrollment.payment_method"
+              :options="paymentOptions"
+              class="payment-select"
+            />
+          </b-form-group>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" v-model="enrollment.accept_declaration" id="decl" />
-            <label class="form-check-label small" for="decl">
+          <!-- Declaration -->
+          <b-form-group>
+            <b-form-checkbox v-model="enrollment.accept_declaration" id="decl">
               I declare the information is true and accept the terms (coverage after 3 months)
-            </label>
-          </div>
+            </b-form-checkbox>
+          </b-form-group>
 
+          <!-- Actions -->
           <div class="d-flex justify-content-between">
             <b-button size="sm" variant="secondary" @click="currentStep = 2">Back</b-button>
-            <b-button size="sm" variant="success" :disabled="submitting || !enrollment.accept_declaration || !enrollment.payment_method" @click="submitEnrollment">
+            <b-button
+              size="sm"
+              variant="success"
+              :disabled="submitting || !enrollment.accept_declaration || !enrollment.payment_method"
+              @click="submitEnrollment"
+            >
               {{ submitting ? 'Submitting…' : 'Complete Enrollment' }}
             </b-button>
           </div>
         </div>
 
+
         <!-- Success -->
         <div v-if="currentStep === 4" class="text-center">
           <h5 class="text-success">Enrollment Submitted</h5>
           <p>Thank you. Payment instructions will be sent to you.</p>
-          <div v-if="result" class="result-box border rounded p-3">
-            <div>Subscription ID: <strong>{{ result.subscription_id }}</strong></div>
-            <div>Monthly: <strong>${{ result.monthly_total }}</strong></div>
-            <div>Next due: <strong>{{ result.next_due_date }}</strong></div>
+          
+          <div v-if="result" class="result-box">
+            <h6 class="mb-3">Enrollment Summary</h6>
+            <div class="mb-2">
+              <span class="text-muted">Subscription ID:</span>
+              <strong class="ml-2">{{ result.subscription_id }}</strong>
+            </div>
+            <div class="mb-2">
+              <span class="text-muted">Monthly Total:</span>
+              <strong class="ml-2">${{ result.monthly_total }}</strong>
+            </div>
+            <div>
+              <span class="text-muted">Next Due Date:</span>
+              <strong class="ml-2">{{ result.next_due_date }}</strong>
+            </div>
           </div>
+
 
           <div class="mt-3">
             <b-button size="sm" variant="primary" @click="resetAll">Enroll Another</b-button>
@@ -234,40 +287,57 @@ export default {
   name: "InsuranceJoin",
   components: { Widget },
   data() {
-    return {
-      errorMessage: null,
-      currentStep: 1,
+  return {
+    errorMessage: null,
+    currentStep: 1,
 
-      // verify
-      verify: { name: "", phone: "" },
-      verifying: false,
-      matches: [],
-      selected: null,
+    // verify
+    verify: { name: "", phone: "" },
+    verifying: false,
+    matches: [],
+    selected: null,
 
-      // plans and enrollment
-      plans: [],
-      enrollment: {
-        owner_plan_id: null,
-        dependents: [],
-        payment_method: "",
-        accept_declaration: false
-      },
+    // plans and enrollment
+    plans: [],
+    enrollment: {
+      owner_plan_id: null,
+      dependents: [],         // each dependent: { first_name, last_name, date_of_birth, gender, plan_id, relationship }
+      payment_method: "",
+      accept_declaration: false
+    },
 
-      paymentMethods: [
-        { value: "bank", label: "Bank Transfer" },
-        { value: "cash", label: "Cash (at reception)" },
-        { value: "mobile", label: "Mobile Money" }
-      ],
+    // helper data for selects (reusable)
+    genderOptions: [
+      { value: "", text: "Select" },
+      { value: "male", text: "Male" },
+      { value: "female", text: "Female" },
+      { value: "other", text: "Other" }
+    ],
 
-      submitting: false,
-      result: null,
-      today: new Date().toISOString().split("T")[0]
-    };
+    paymentMethods: [
+      { value: "bank", label: "Bank Transfer" },
+      { value: "cash", label: "Cash (at reception)" },
+      { value: "mobile", label: "Mobile Money" }
+    ],
+
+    submitting: false,
+    result: null,
+    today: new Date().toISOString().split("T")[0]
+  };
   },
   computed: {
     ownerPlanName() {
       const p = this.planById(this.enrollment.owner_plan_id);
       return p ? p.name : "—";
+    },
+    paymentOptions() {
+      // Normalize whatever shape your paymentMethods currently have.
+      // Accepts arrays like [{ value: 'bank', label: 'Bank Transfer' }]
+      if (!this.paymentMethods || !this.paymentMethods.length) return [];
+      return this.paymentMethods.map(m => {
+        // support both { value, label } and { value, text } shapes
+        return { value: m.value, text: m.label || m.text || String(m.value) };
+      });
     },
     ownerPrice() {
       if (!this.enrollment.owner_plan_id || !this.selected || !this.selected.date_of_birth) return "0.00";
@@ -636,4 +706,34 @@ export default {
   .matches-list .match-card { flex-direction: column; align-items: flex-start; gap: 8px; }
   .match-info { max-width: 100%; }
 }
+
+/* make select / options readable */
+.payment-select .custom-select,
+.payment-select .form-control {
+  color: #111 !important;
+}
+
+/* owner / dependent card tweaks */
+.owner-card .owner-info .h5 {
+  font-size: 1.1rem;
+}
+.owner-card .owner-plan {
+  min-width: 140px;
+}
+.dependent-card {
+  background: #fff;
+}
+.dependent-card .dependent-left {
+  max-width: 70%;
+}
+.dependent-card .dependent-right {
+  min-width: 140px;
+  text-align: right;
+}
+
+/* small spacing helper for stacked dependents */
+.gap-2 > * + * {
+  margin-top: 0.5rem;
+}
+
 </style>
