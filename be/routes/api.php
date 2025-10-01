@@ -8,6 +8,7 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\InsurancePublicController;
 use App\Http\Controllers\ConsultationController;
+use App\Http\Controllers\InsuranceSubscriptionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,16 +48,6 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::apiResources(['directory' => 'DirectoryController']);
     Route::apiResources(['payouts' => 'PayoutController']);
 
-    Route::post('/paypal', ['uses' => 'PaymentController@payWithpaypal']);
-    Route::post('/payment/status', ['uses' => 'PaymentController@getPaymentStatus']);
-    Route::get('/payment/{id}', ['uses' => 'PaymentController@show']);
-    Route::get('/payments_doctor/{id}', ['uses' => 'PaymentController@getDoctorPayments']); 
-    Route::post('/accept_user', ['uses' => 'UserDetailsController@acceptUser']);   
-    Route::get('/dashboard_condition', ['uses' => 'MonthlyConditionController@getCondition']);
-    Route::get('/doctor_files/{id}', ['uses' => 'DoctorDetailController@showFiles']);
-    Route::post('/doctor_files', ['uses' => 'DoctorDetailController@storeFiles']);
-    Route::get('/download_files/{id}', ['uses' => 'DoctorDetailController@downloadFiles']);
-    Route::get('/getPayouts', ['uses' => 'PayoutController@getPayouts']);
     Route::get('/getMonthlyCondition', ['uses' => 'MonthlyConditionController@getMonthlyCondition']);
     Route::get('/dashboard/{id}/{account_type}', ['uses' => 'DashboardController@getData']);
 

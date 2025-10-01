@@ -134,7 +134,7 @@ class InsuranceSubscriptionController extends Controller
         $validator = Validator::make($request->all(), [
             'amount' => 'required|numeric|min:0',
             'payment_method' => 'required|string',
-            'transaction_ref' => 'nullable|string',
+            'reference' => 'nullable|string',
             'paid_at' => 'nullable|date',
         ]);
 
@@ -152,7 +152,7 @@ class InsuranceSubscriptionController extends Controller
                 'subscription_id' => $subscription->id,
                 'amount' => $request->amount,
                 'payment_method' => $request->payment_method,
-                'transaction_ref' => $request->transaction_ref,
+                'transaction_ref' => $request->reference,
                 'paid_at' => $request->paid_at ?? now(),
                 'status' => 'completed',
             ]);
