@@ -207,4 +207,37 @@ class InsuranceSubscriptionController extends Controller
             ], 500);
         }
     }
+
+    public function verifyByPolicyNumber(Request $request)
+    {
+        $request->validate([
+            'policy_number' => 'required|string',
+        ]);
+
+        $policyNumber = $request->input('policy_number');
+
+        // Fetch the subscription with status 'covered'
+        $subscription = InsuranceSubscription::where('id', $policyNumber)
+            ->where('status', 'covered')
+            ->with('patient') // load related patient info
+            ->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'message' => 'No active policy found with that number.'
+            ], 404);
+        }
+
+        return response()->json([
+            'id' => $subscription->id,
+            'policy_number' => $subscription->policy_number,
+            'status' => $subscription->status,
+            'balance' => $subscription->balance, // make sure you have this field
+            'patient' => [
+                'id' => $subscription->patient->id ?? null,
+                'first_name' => $subscription->patient->first_name ?? null,
+                'last_name' => $subscription->patient->last_name ?? null,
+            ],
+        ]);
+    }
 }

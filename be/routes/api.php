@@ -57,6 +57,7 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::patch('/subscriptions/{id}', [InsuranceSubscriptionController::class, 'update']);
     Route::post('/subscriptions/{id}/close', [InsuranceSubscriptionController::class, 'close']);
     Route::post('/subscriptions/{id}/payments', [InsuranceSubscriptionController::class, 'addPayment']);
+    Route::get('/subscription/verify-by-policy', [InsuranceSubscriptionController::class, 'verifyByPolicyNumber']);
     
     // Reports
     Route::get('/reports/subscriptions', [InsuranceReportController::class, 'subscriptions']);

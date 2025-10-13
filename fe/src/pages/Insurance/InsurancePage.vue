@@ -235,8 +235,9 @@
 
               <div class="p-3 d-flex justify-content-end">
                 <div class="text-right">
-                  <div class="small text-muted">Total paid</div>
-                  <div class="h5 mb-0">{{ money(totalPayments) }}</div>
+                  <div class="mr-4 small text-muted">Total paid: {{ money(subscription.total_paid_amount || 0) }}</div>
+                  <div class="mr-4 small text-muted">Total claims: {{ money(totalClaims) }}</div>
+                  <div class="mr-4 small text-muted">Available balance: {{ money(balance) }}</div>
                 </div>
               </div>
             </div>
@@ -322,7 +323,22 @@ export default {
     },
     validPaymentForm() {
       return this.paymentForm.amount && Number(this.paymentForm.amount) > 0 && this.paymentForm.method;
+    },
+    totalClaims() {
+    // if subscription includes claims
+    if (this.subscription && Array.isArray(this.subscription.claims)) {
+      return this.subscription.claims.reduce((s, c) => s + Number(c.amount || 0), 0);
     }
+    // fallback to API-sourced computed number you may fetch separately
+    return 0;
+  },
+
+  balance() {
+    // available balance = total_paid_amount - total_claims
+    const paid = Number(this.subscription.total_paid_amount || 0);
+    const claims = Number(this.totalClaims || 0);
+    return (paid - claims).toFixed(2);
+  }
   },
   methods: {
     loadSubscription() {

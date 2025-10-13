@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultation;
 use App\Models\MedicalHistory;
+use App\Models\InsuranceSubscription;
+use App\Models\PolicyClaim;
+use App\Models\InsurancePayment;
 use App\Models\Patient;   // adjust if your model/table differs
 use App\Models\User;
 use App\Models\Location;
@@ -14,124 +17,115 @@ use Carbon\Carbon;
 
 class ConsultationController extends Controller
 {
-    /**
-     * Create a booking (consultation).
-     * - user_id: who is creating the booking
-     * - doctor_id: which doctor is assigned
-     * - location_id: where the consult happens
-     * - start_at / end_at: must be 30-min aligned
-     * - For super doctors (users.is_super_doctor = true), all bookings
-     *   on the same day must be at a single location.
-     */
+    
     public function store(Request $request)
-{
-    Log::debug(__METHOD__.' request', $request->all());
-
-    $validated = $request->validate([
-        'user_id'       => ['required', 'integer', 'exists:users,id'],      // creator
-        'doctor_id'     => ['required', 'integer', 'exists:users,id'],      // assigned doctor
-        'patient_id'    => ['required', 'integer', 'exists:patients,id'],
-        'location_id'   => ['required', 'integer', 'exists:locations,id'],
-        'reason'        => ['required', 'string'],
-        'instruction'   => ['nullable', 'string'],
-        'past_medical_history' => ['nullable', 'string'],
-        'start_at'      => ['required', 'date'],
-        'end_at'        => ['required', 'date'],
-        'consultation_fee' => ['nullable', 'numeric', 'min:0'],
-        'payment_method' => 'required',
-    ]);
-
-    $start = \Carbon\Carbon::parse($validated['start_at'])->seconds(0);
-    $end   = \Carbon\Carbon::parse($validated['end_at'])->seconds(0);
-
-    if (!in_array($start->minute, [0,30], true) || !in_array($end->minute, [0,30], true)) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Start and end times must be on 30-minute boundaries (e.g., 09:00, 09:30, 10:00).',
-        ], 422);
-    }
-
-    $doctor   = \App\Models\User::findOrFail($validated['doctor_id']);
-    $location = \App\Models\Location::findOrFail($validated['location_id']);
-
-    // Overlap check for doctor
-    $overlap = \App\Models\Consultation::where('doctor_id', $doctor->id)
-        ->where(function ($q) use ($start, $end) {
-            $q->whereBetween('start_at', [$start, $end])
-              ->orWhereBetween('end_at', [$start, $end])
-              ->orWhere(function ($qq) use ($start, $end) {
-                  $qq->where('start_at', '<=', $start)
-                     ->where('end_at', '>=', $end);
-              });
-        })
-        ->exists();
-
-    if ($overlap) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Selected time overlaps with an existing booking for this doctor.',
-        ], 422);
-    }
-
-    // Super doctor: single location per day
-    if ((bool)($doctor->is_super_doctor ?? false)) {
-        $dayStart = $start->copy()->startOfDay();
-        $dayEnd   = $start->copy()->endOfDay();
-
-        $diffLocation = \App\Models\Consultation::where('doctor_id', $doctor->id)
-            ->whereBetween('start_at', [$dayStart, $dayEnd])
-            ->where('location_id', '!=', $location->id)
-            ->exists();
-
-        if ($diffLocation) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This super doctor already has bookings at a different location on this day.',
-            ], 422);
-        }
-    }
-
-    // Create booking + optional medical history
-    $booking = \DB::transaction(function () use ($validated, $start, $end) {
-        $booking = \App\Models\Consultation::create([
-            'user_id'     => $validated['user_id'],     // creator
-            'doctor_id'   => $validated['doctor_id'],   // assigned doctor
-            'patient_id'  => $validated['patient_id'],
-            'location_id' => $validated['location_id'],
-            'reason'      => $validated['reason'],
-            'instruction' => $validated['instruction'] ?? null,
-            'start_at'    => $start,
-            'end_at'      => $end,
-            'status'      => 0, // pending
-            'consultation_fee' => $validated['consultation_fee'] ?? null,
-            'payment_method' => $validated['payment_method']
+    {
+        $data = $request->validate([
+            'user_id' => 'required|integer',
+            'patient_id' => 'required|integer',
+            'doctor_id' => 'required',
+            'location_id' => 'required',
+            'date' => 'required|date',
+            'time' => 'required',
+            'start_at' => 'required',
+            'end_at' => 'required',
+            'consultation_fee' => 'required|numeric',
+            // payments/claim are optional in this endpoint
         ]);
 
-        if (!empty($validated['past_medical_history'])) {
-            \App\Models\MedicalHistory::create([
-                'consultation_id' => $booking->id, // <-- use $booking, not $consultation
-                'history'         => $validated['past_medical_history'],
+        DB::beginTransaction();
+        try {
+            // create consultation
+            $consultation = Consultation::create([
+                'user_id' => $data['user_id'],
+                'patient_id' => $data['patient_id'],
+                'doctor_id' => $data['doctor_id'],
+                'location_id' => $data['location_id'],
+                'date' => $data['date'],
+                'time' => $data['time'],
+                'start_at' => $data['start_at'],
+                'end_at' => $data['end_at'],
+                'past_medical_history' => $request->input('past_medical_history'),
+                'reason' => $request->input('reason'),
+                'instruction' => $request->input('instruction'),
+                'consultation_fee' => $request->input('consultation_fee'),
+                'status' => 'booked',
             ]);
+
+            // handle policy_claim if present
+            $policyClaimInput = $request->input('policy_claim');
+            if ($policyClaimInput && isset($policyClaimInput['subscription_id']) && isset($policyClaimInput['amount'])) {
+                $subscriptionId = $policyClaimInput['subscription_id'];
+                $amount = (float)$policyClaimInput['amount'];
+
+                /** @var InsuranceSubscription $subscription */
+                $subscription = InsuranceSubscription::find($subscriptionId);
+                if (!$subscription) throw new \Exception("Subscription not found.");
+
+                // create policy claim record
+                $claim = PolicyClaim::create([
+                    'subscription_id' => $subscription->id,
+                    'consultation_id' => $consultation->id,
+                    'claim_holder_first_name' => $policyClaimInput['claim_for']['first_name'] ?? null,
+                    'claim_holder_last_name' => $policyClaimInput['claim_for']['last_name'] ?? null,
+                    'claim_holder_dob' => $policyClaimInput['claim_for']['date_of_birth'] ?? null,
+                    'claim_holder_relationship' => $policyClaimInput['claim_for']['relationship'] ?? null,
+                    'amount' => $amount,
+                    'note' => $policyClaimInput['note'] ?? null,
+                    'status' => 'processed',
+                ]);
+
+                // create a payment record for the amount paid by the policy (link to subscription)
+                // NOTE: adjust fields to match your InsurancePayment model
+                InsurancePayment::create([
+                    'subscription_id' => $subscription->id,
+                    'consultation_id' => $consultation->id,
+                    'amount' => $amount,
+                    'method' => 'policy_claim',
+                    'reference' => 'CLAIM#' . $claim->id,
+                    'note' => 'Claim applied to consultation #' . $consultation->id,
+                    'created_at' => now(),
+                ]);
+
+                // update subscription totals - depends on your schema
+                $subscription->total_paid_amount = bcadd($subscription->total_paid_amount ?? 0, $amount, 2);
+                $subscription->last_payment_at = now();
+                $subscription->save();
+            }
+
+            // handle other payments array (for remainder)
+            $paymentsInput = $request->input('payments', []);
+            foreach ($paymentsInput as $p) {
+                $amount = (float)($p['amount'] ?? 0);
+                if ($amount <= 0) continue;
+                InsurancePayment::create([
+                    'subscription_id' => $p['subscription_id'] ?? null, // optional
+                    'consultation_id' => $consultation->id,
+                    'amount' => $amount,
+                    'method' => $p['method'] ?? $p['payment_method'] ?? 'cash',
+                    'reference' => $p['reference'] ?? null,
+                    'note' => $p['description'] ?? null,
+                    'created_at' => now(),
+                ]);
+                // if payment is linked to subscription update subscription totals
+                if (!empty($p['subscription_id'])) {
+                    $sub = InsuranceSubscription::find($p['subscription_id']);
+                    if ($sub) {
+                        $sub->total_paid_amount = bcadd($sub->total_paid_amount ?? 0, $amount, 2);
+                        $sub->last_payment_at = now();
+                        $sub->save();
+                    }
+                }
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'consultation' => $consultation], 201);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            \Log::error('Consultation store error: '.$e->getMessage(), ['trace'=>$e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to create consultation: '.$e->getMessage()], 500);
         }
-
-         // Update patient status to 'booked'
-        $patient = \App\Models\Patient::find($validated['patient_id']);
-        if ($patient) {
-            $patient->status = 'booked';
-            $patient->assigned_doctor_id = $validated['doctor_id'];
-            $patient->save();
-        }
-
-        return $booking;
-    });
-
-    return response()->json([
-        'success' => true,
-        'message' => 'Consultation booked successfully.',
-        'data'    => $booking->load(['patient', 'doctor', 'location', 'creator']),
-    ], 201);
-}
-
+    }
 
     /**
      * Save/update doctor notes.
@@ -301,11 +295,11 @@ class ConsultationController extends Controller
         ];
     });
 
-return response()->json([
-    'success' => true,
-    'message' => 'Consultations fetched.',
-    'data'    => $consultations,
-]);
+    return response()->json([
+        'success' => true,
+        'message' => 'Consultations fetched.',
+        'data'    => $consultations,
+    ]);
 
         $data = $consultations->map(function ($c) {
             // prefer hasOne medicalHistory; fall back to first of medicalHistories if present
