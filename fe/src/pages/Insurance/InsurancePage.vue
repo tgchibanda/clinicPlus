@@ -24,6 +24,7 @@
         <b-form-group label="Amount (USD)" label-for="payment-amount" description="Enter the amount to apply to the subscription.">
           <b-input-group prepend="$">
             <b-form-input
+              readonly
               id="payment-amount"
               v-model.number="paymentForm.amount"
               type="number"
@@ -93,7 +94,7 @@
             <div class="flex-grow-1">
               <div class="d-flex align-items-center flex-wrap">
                 <h3 class="mb-0 mr-3">{{ subscriptionTitle }}</h3>
-                <span class="badge" :class="subscriptionStatusClass">{{ capFirst(subscription.status) || '—' }}</span>
+                <span class="badge" :class="subscriptionStatusClass(capFirst(subscription.status))">{{ capFirst(subscription.status) || '—' }}</span>
               </div>
 
               <div class="text-muted mt-1">
@@ -113,7 +114,7 @@
                   <i class="fa fa-arrow-left mr-1"></i> Back
                 </b-button>
                 
-                <b-button variant="success" class="ml-2" @click="openAddPayment">
+                <b-button variant="success" :disabled="subscription.status === 'lapsed'" class="ml-2" @click="openAddPayment">
                   <i class="fa fa-plus mr-1"></i> Add Payment
                 </b-button>
               </div>
@@ -244,7 +245,7 @@
 
         <!-- Actions -->
         <div class="mb-5 d-flex justify-content-end">
-          <b-button variant="success" @click="openAddPayment"><span class="fa fa-credit-card" /> Add Payment</b-button>
+          <b-button variant="success" :disabled="subscription.status === 'lapsed'" @click="openAddPayment"><span class="fa fa-credit-card" /> Add Payment</b-button>
         </div>
       </div>
     </div>
@@ -306,7 +307,11 @@ export default {
       return this.subscription.dependents.length;
     },
     ownerMonthly() {
-      if (this.subscription && this.subscription.monthly_total) return Number(this.subscription.monthly_total);
+      // If the backend already gives monthly_total per subscription, prefer that for ownerMonthly calculation fallback:
+      if (this.subscription && this.subscription.monthly_total) {
+        // monthly_total is for entire subscription; ownerMonthly should be part of it. Keep fallback simple:
+        return Number(this.subscription.monthly_total) || 0;
+      }
       if (!this.subscription || !this.subscription.plan || !this.subscription.patient) return 0;
       const plan = this.subscription.plan;
       const age = this.ageFromDate(this.subscription.patient.date_of_birth);
@@ -431,9 +436,10 @@ export default {
       return String(s).charAt(0).toUpperCase() + String(s).slice(1);
     },
 
-    subscriptionStatusClass() {
-      const s = (this.subscription && this.subscription.status) ? String(this.subscription.status).toLowerCase() : "";
+    subscriptionStatusClass(status) {
+      const s = (status) ? String(this.subscription.status).toLowerCase() : "";
       if (s === "active" || s === "paid" || s === "completed") return "badge-success";
+      if (s === "covered") return "badge-info";
       if (s === "pending" || s === "due") return "badge-warning";
       if (s === "lapsed" || s === "closed" || s === "cancelled") return "badge-danger";
       return "badge-secondary";
@@ -465,9 +471,41 @@ export default {
 
     /* ===== Add payment modal helpers ===== */
     openAddPayment() {
-      // prefill amount suggestion (ownerMonthly as hint)
+      // prefill amount suggestion (ownerMonthly + dependents)
       this.paymentError = null;
-      this.paymentForm.amount = null;
+
+      // If backend provides subscription.monthly_total use it (prefer), else compute
+      const backendTotal = this.subscription && (this.subscription.monthly_total || this.subscription.monthly_amount || this.subscription.monthly);
+      if (typeof backendTotal !== "undefined" && backendTotal !== null && backendTotal !== "") {
+        // try parse number safely
+        const n = Number(backendTotal);
+        this.paymentForm.amount = isNaN(n) ? null : n;
+      } else {
+        // compute owner + dependents
+        let total = 0;
+        // ownerMonthly may be a fallback that returns the whole subscription monthly_total; ensure we compute properly:
+        try {
+          // If subscription.plan & patient exist, compute owner's price
+          if (this.subscription && this.subscription.plan && this.subscription.patient && this.subscription.patient.date_of_birth) {
+            const plan = this.subscription.plan;
+            const age = this.ageFromDate(this.subscription.patient.date_of_birth);
+            total += Number(age >= 18 ? (plan.price_adult || 0) : (plan.price_child || 0));
+          } else if (this.ownerMonthly) {
+            total += Number(this.ownerMonthly || 0);
+          }
+
+          // dependents
+          if (this.subscription && Array.isArray(this.subscription.dependents)) {
+            this.subscription.dependents.forEach(d => {
+              total += Number(this.dependentMonthly(d) || 0);
+            });
+          }
+        } catch (e) {
+          // fallback safety
+        }
+        this.paymentForm.amount = Number(total) || null;
+      }
+
       this.paymentForm.method = "";
       this.paymentForm.reference = "";
       this.paymentForm.note = "";

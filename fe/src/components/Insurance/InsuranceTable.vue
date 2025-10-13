@@ -1,28 +1,16 @@
 <template>
   <div>
-    <vue-element-loading
-      :active="isLoading"
-      :is-full-screen="true"
-      :size="'80'"
-      :color="'#FF6700'"
-      :text="'Loading…'"
-    />
+    <vue-element-loading :active="isLoading" :is-full-screen="true" :size="'80'" :color="'#FF6700'"
+      :text="'Loading…'" />
 
-    <Widget
-      title="<h5>My <span class='fw-semi-bold'>Insurance</span></h5>"
-      bodyClass="widget-table-overflow"
-      customHeader
-      :fetchingData="loading"
-    >
+    <Widget title="<h5>My <span class='fw-semi-bold'>Insurance</span></h5>" bodyClass="widget-table-overflow"
+      customHeader :fetchingData="loading">
       <!-- Toolbar -->
       <div class="toolbar d-flex flex-wrap align-items-center mb-3">
         <!-- Search -->
         <b-input-group class="mr-3 mb-2 search-box">
-          <b-form-input
-            v-model.trim="searchInput"
-            placeholder="Search by owner name (first or last)…"
-            @keydown.enter.prevent="applySearch"
-          />
+          <b-form-input v-model.trim="searchInput" placeholder="Search by owner name (first or last)…"
+            @keydown.enter.prevent="applySearch" />
           <b-input-group-append>
             <b-button variant="primary" @click="applySearch">
               <i class="fa fa-search mr-1" /> Search
@@ -33,12 +21,8 @@
         <!-- Page size -->
         <div class="d-flex align-items-center mb-2 page-size">
           <label class="mb-0 mr-2 text-muted small">Rows per page</label>
-          <b-form-select
-            v-model.number="pageSize"
-            :options="pageSizeOptions"
-            class="page-size-select"
-            @change="onPageSizeChange"
-          />
+          <b-form-select v-model.number="pageSize" :options="pageSizeOptions" class="page-size-select"
+            @change="onPageSizeChange" />
         </div>
 
         <!-- Summary -->
@@ -119,63 +103,36 @@
       </div>
 
       <!-- Client-side Pagination -->
-      <div
-        class="pagination-bar d-flex flex-wrap justify-content-between align-items-center mt-3"
-        v-if="totalPages > 1"
-      >
+      <div class="pagination-bar d-flex flex-wrap justify-content-between align-items-center mt-3"
+        v-if="totalPages > 1">
         <div class="btn-group mb-2">
-          <b-button
-            size="sm"
-            variant="outline-secondary"
-            :disabled="currentPage === 1"
-            @click="goToPage(currentPage - 1)"
-          >
+          <b-button size="sm" variant="outline-secondary" :disabled="currentPage === 1"
+            @click="goToPage(currentPage - 1)">
             ← Previous
           </b-button>
-          <b-button
-            size="sm"
-            variant="outline-secondary"
-            :disabled="currentPage === totalPages"
-            @click="goToPage(currentPage + 1)"
-          >
+          <b-button size="sm" variant="outline-secondary" :disabled="currentPage === totalPages"
+            @click="goToPage(currentPage + 1)">
             Next →
           </b-button>
         </div>
 
         <!-- Numbered pages (compact) -->
         <div class="mb-2">
-          <b-button
-            v-if="totalPages >= 1"
-            size="sm"
-            class="mx-1"
-            :variant="pageBtnVariant(1)"
-            @click="goToPage(1)"
-          >
+          <b-button v-if="totalPages >= 1" size="sm" class="mx-1" :variant="pageBtnVariant(1)" @click="goToPage(1)">
             1
           </b-button>
 
           <span v-if="showLeftEllipsis" class="mx-1">…</span>
 
-          <b-button
-            v-for="p in middlePages"
-            :key="'p'+p"
-            size="sm"
-            class="mx-1"
-            :variant="pageBtnVariant(p)"
-            @click="goToPage(p)"
-          >
+          <b-button v-for="p in middlePages" :key="'p' + p" size="sm" class="mx-1" :variant="pageBtnVariant(p)"
+            @click="goToPage(p)">
             {{ p }}
           </b-button>
 
           <span v-if="showRightEllipsis" class="mx-1">…</span>
 
-          <b-button
-            v-if="totalPages > 1"
-            size="sm"
-            class="mx-1"
-            :variant="pageBtnVariant(totalPages)"
-            @click="goToPage(totalPages)"
-          >
+          <b-button v-if="totalPages > 1" size="sm" class="mx-1" :variant="pageBtnVariant(totalPages)"
+            @click="goToPage(totalPages)">
             {{ totalPages }}
           </b-button>
         </div>
@@ -292,7 +249,7 @@ export default {
           this.$swal("Error", msg, "error");
         });
     },
-formatDate(val) {
+    formatDate(val) {
       if (!val) return "—";
       const d = new Date(val);
       if (isNaN(d.getTime())) return val; // fallback if invalid
@@ -300,8 +257,8 @@ formatDate(val) {
         day: "2-digit",
         month: "short",
         year: "numeric"
-    });
-  },
+      });
+    },
     // pagination
     goToPage(page) {
       if (page < 1 || page > this.totalPages) return;
@@ -410,12 +367,12 @@ formatDate(val) {
       return isNaN(d.getTime())
         ? val
         : d.toLocaleString("en-AU", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          });
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
     },
     money(v) {
       const n = Number(v || 0);
@@ -424,6 +381,7 @@ formatDate(val) {
     statusClass(status) {
       const s = (status || "").toString().toLowerCase();
       if (s === "active" || s === "paid" || s === "completed") return "bg-success";
+      if (s === "covered") return "badge-info";
       if (s === "pending" || s === "due") return "bg-warning";
       if (s === "lapsed" || s === "closed" || s === "cancelled") return "bg-danger";
       return "bg-secondary";

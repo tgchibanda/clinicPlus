@@ -166,13 +166,18 @@ class InsuranceSubscriptionController extends Controller
             
             $subscription->last_payment_at = $payment->paid_at;
             $subscription->due_count = 0; // Reset overdue count
-            $subscription->next_due_date = Carbon::parse($subscription->next_due_date)->addMonth();
+
+            if (!$subscription->first_payment_at) {
+                $subscription->next_due_date = Carbon::parse($subscription->next_due_date);
+            } else {
+                $subscription->next_due_date = Carbon::parse($subscription->next_due_date)->addMonth();
+            }
 
             // Check if coverage should start
             $completedPayments = $subscription->getCompletedPaymentsCount();
             if ($completedPayments >= 3 && !$subscription->coverage_starts_at) {
                 $subscription->coverage_starts_at = Carbon::parse($subscription->started_at)->addMonths(3);
-                $subscription->status = 'active';
+                $subscription->status = 'covered';
             } elseif ($subscription->status === 'pending' && $completedPayments > 0) {
                 $subscription->status = 'active';
             }

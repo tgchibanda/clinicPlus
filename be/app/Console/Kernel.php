@@ -24,8 +24,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // run daily at 02:00 server time (adjust to suit)
+        $schedule->command('insurance:check-overdue')->dailyAt('02:00')->name('insurance:check-overdue');
     }
+
 
     /**
      * Register the commands for the application.
