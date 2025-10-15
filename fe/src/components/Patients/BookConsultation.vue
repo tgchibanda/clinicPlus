@@ -112,7 +112,7 @@
 
         <div v-if="policy">
           <b-card class="mb-2">
-            <div><strong>Policy:</strong> {{ policy.id ? '#' + policy.id : (policy.policy_number || '—') }} — <small class="text-muted">{{ (policy.plan && policy.plan.name) ? policy.plan.name : '—' }}</small></div>
+            <div><strong>Policy:</strong> {{ policy.policy_number ? policy.policy_number : (policy.id || '—') }}  (<small class="text-muted">{{ (policy.plan) ? policy.plan : '—' }}</small>)</div>
             <div class="small text-muted">Owner: {{ policy.patient ? (policy.patient.first_name + ' ' + (policy.patient.last_name || '')) : '—' }}</div>
             <div class="small text-muted">Available balance: {{ money(policy.available_balance || policy.balance || 0) }}</div>
           </b-card>
@@ -378,7 +378,11 @@ export default {
         })
         .finally(() => { this.policyLoading = false; });
     },
-
+money(value) {
+    const n = Number(value || 0);
+    if (isNaN(n)) return "$0.00";
+    return "$" + n.toFixed(2);
+  },
     handleSubmit() {
       if (!this.canSubmit) return;
       this.submitting = true;

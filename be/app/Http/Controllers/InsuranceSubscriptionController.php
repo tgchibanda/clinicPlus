@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\InsurancePlan;
 use App\Models\InsuranceSubscription;
-use App\Models\InsuranceDependent;
+use App\Models\PolicyClaim;
 use App\Models\InsurancePayment;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -32,10 +32,10 @@ class InsuranceSubscriptionController extends Controller
 
         if ($request->has('search')) {
             $search = $request->search;
-            $query->whereHas('patient', function($q) use ($search) {
+            $query->whereHas('patient', function ($q) use ($search) {
                 $q->where('first_name', 'LIKE', "%{$search}%")
-                  ->orWhere('last_name', 'LIKE', "%{$search}%")
-                  ->orWhere('phone', 'LIKE', "%{$search}%");
+                    ->orWhere('last_name', 'LIKE', "%{$search}%")
+                    ->orWhere('phone', 'LIKE', "%{$search}%");
             });
         }
 
@@ -59,8 +59,8 @@ class InsuranceSubscriptionController extends Controller
     public function show(int $id): JsonResponse
     {
         $subscription = InsuranceSubscription::with([
-            'patient', 
-            'plan', 
+            'patient',
+            'plan',
             'dependents.plan',
             'payments' => fn($q) => $q->orderBy('paid_at', 'desc'),
             'events' => fn($q) => $q->orderBy('created_at', 'desc')->limit(50)
@@ -155,15 +155,16 @@ class InsuranceSubscriptionController extends Controller
                 'transaction_ref' => $request->reference,
                 'paid_at' => $request->paid_at ?? now(),
                 'status' => 'completed',
+                'description' => $request->description ?? null,
             ]);
 
             // Update subscription
             $subscription->total_paid_amount += $payment->amount;
-            
+
             if (!$subscription->first_payment_at) {
                 $subscription->first_payment_at = $payment->paid_at;
             }
-            
+
             $subscription->last_payment_at = $payment->paid_at;
             $subscription->due_count = 0; // Reset overdue count
 
@@ -198,7 +199,6 @@ class InsuranceSubscriptionController extends Controller
                 'subscription' => $subscription->fresh(),
                 'message' => 'Payment recorded successfully'
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -206,6 +206,23 @@ class InsuranceSubscriptionController extends Controller
                 'message' => 'Failed to record payment: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function getPolicyBalance($subscriptionId)
+    {
+        // Sum of all successful payments for the subscription
+        $totalPaid = InsurancePayment::where('subscription_id', $subscriptionId)
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        // Sum of all claims made against the policy
+        $totalClaimed = PolicyClaim::where('subscription_id', $subscriptionId)
+            ->sum('amount');
+
+        // Balance is total paid minus total claimed
+        $balance = $totalPaid - $totalClaimed;
+
+        return $balance;
     }
 
     public function verifyByPolicyNumber(Request $request)
@@ -216,10 +233,9 @@ class InsuranceSubscriptionController extends Controller
 
         $policyNumber = $request->input('policy_number');
 
-        // Fetch the subscription with status 'covered'
-        $subscription = InsuranceSubscription::where('id', $policyNumber)
-            ->where('status', 'covered')
-            ->with('patient') // load related patient info
+        // Fetch subscription by policy number or ID
+        $subscription = InsuranceSubscription::where('policy_number', $policyNumber)
+            ->with('patient')
             ->first();
 
         if (!$subscription) {
@@ -228,11 +244,22 @@ class InsuranceSubscriptionController extends Controller
             ], 404);
         }
 
+        if ($subscription->status != 'covered') {
+            return response()->json([
+                'message' => 'This policy is not yet matured.'
+            ], 404);
+        }
+
+        // Calculate current balance
+        $balance = $this->getPolicyBalance($subscription->id);
+        // or $subscription->balance will get the balance because of the relationship
+
         return response()->json([
             'id' => $subscription->id,
-            'policy_number' => $subscription->policy_number,
             'status' => $subscription->status,
-            'balance' => $subscription->balance, // make sure you have this field
+            'policy_number' => $subscription->policy_number,
+            'plan' => $subscription->plan->name,
+            'balance' => $balance,
             'patient' => [
                 'id' => $subscription->patient->id ?? null,
                 'first_name' => $subscription->patient->first_name ?? null,
