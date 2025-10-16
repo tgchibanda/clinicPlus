@@ -8,7 +8,7 @@ class PolicyClaim extends Model
     protected $fillable = [
         'subscription_id', 'consultation_id',
         'claim_holder_first_name', 'claim_holder_last_name', 'claim_holder_dob', 'claim_holder_relationship',
-        'amount', 'note', 'status'
+        'amount', 'claim_category', 'status'
     ];
 
     public function subscription() {

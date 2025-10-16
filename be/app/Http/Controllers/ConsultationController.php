@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Consultation;
 use App\Models\MedicalHistory;
 use App\Models\InsuranceSubscription;
-use App\Models\PolicyClaim;
 use App\Models\InsurancePayment;
 use App\Models\Patient;   // adjust if your model/table differs
 use App\Models\User;
@@ -14,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\PolicyClaim;
 use App\Models\BookingPayment; 
 
 class ConsultationController extends Controller
@@ -153,7 +153,6 @@ class ConsultationController extends Controller
                     'claim_holder_dob'        => $dob,
                     'claim_holder_relationship' => $policyClaimInput['claim_for']['relationship'] ?? null,
                     'amount' => $amount,
-                    'note' => $policyClaimInput['note'] ?? null,
                     'status' => 'processed',
                 ]);
             }

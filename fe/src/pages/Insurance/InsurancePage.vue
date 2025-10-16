@@ -24,13 +24,13 @@
         <b-form-group label="Amount (USD)" label-for="payment-amount" description="Enter the amount to apply to the subscription.">
           <b-input-group prepend="$">
             <b-form-input
-              readonly
               id="payment-amount"
               v-model.number="paymentForm.amount"
               type="number"
               step="0.01"
               min="0.01"
               required
+              readonly
               placeholder="e.g. 50.00"
             />
           </b-input-group>
@@ -82,7 +82,7 @@
     <div class="row">
       <div class="col-lg-10 mx-auto">
         <!-- Subscription summary -->
-        <div class="card shadow-sm rounded-3 mb-4">
+        <div class="card shadow-sm rounded-3 mb-4" v-if="subscriptionLoaded">
           <div class="card-body d-flex align-items-center">
             <div
               class="avatar rounded-circle bg-light d-flex align-items-center justify-content-center mr-3"
@@ -98,14 +98,14 @@
               </div>
 
               <div class="text-muted mt-1">
-                <div>Subscription ID: <strong>#{{ subscription.id || '—' }}</strong></div>
+                <div>Policy Number: <strong>{{ subscription.policy_number || '—' }}</strong></div>
                 <div>Plan: <strong>{{ planName }}</strong></div>
               </div>
 
               <div class="mt-3 d-flex flex-wrap">
                 <div class="mr-4 small text-muted">Started: {{ formatDate(subscription.started_at) }}</div>
                 <div class="mr-4 small text-muted">Next due: {{ formatDate(subscription.next_due_date) }}</div>
-                <div class="mr-4 small text-muted">Total paid: {{ money(subscription.total_paid_amount || 0) }}</div>
+                <div class="mr-4 small text-muted">Total paid: {{ money(subscription.total_paid_amount || totalPayments) }}</div>
                 <div class="mr-4 small text-muted">Due count: {{ subscription.due_count || 0 }}</div>
               </div>
 
@@ -114,7 +114,7 @@
                   <i class="fa fa-arrow-left mr-1"></i> Back
                 </b-button>
                 
-                <b-button variant="success" :disabled="subscription.status === 'lapsed'" class="ml-2" @click="openAddPayment">
+                <b-button variant="success" class="ml-2" @click="openAddPayment" :disabled="!subscription.id">
                   <i class="fa fa-plus mr-1"></i> Add Payment
                 </b-button>
               </div>
@@ -122,8 +122,10 @@
           </div>
         </div>
 
+        <div v-else class="text-center py-4 text-muted">Loading subscription…</div>
+
         <!-- Owner & Members row -->
-        <div class="row">
+        <div class="row" v-if="subscriptionLoaded">
           <!-- Owner -->
           <div class="col-md-6 mb-4">
             <div class="card shadow-sm rounded-3 h-100">
@@ -176,7 +178,7 @@
                       <div>
                         <div class="font-weight-medium">{{ d.first_name }} {{ d.last_name }}</div>
                         <div class="small text-muted">DOB: {{ formatDate(d.date_of_birth) }} • Age: {{ ageFromDate(d.date_of_birth) }}</div>
-                        <div class="small text-muted">Relationship: {{ d.relationship || '—' }}</div>
+                        <div class="small text-muted">Gender: {{ d.gender || '—' }}</div>
                       </div>
                       <div class="text-right">
                         <div class="font-weight-bold">{{ money(dependentMonthly(d)) }}/mo</div>
@@ -193,41 +195,48 @@
         </div>
 
         <!-- Payments / Statement -->
-        <div class="card shadow-sm rounded-3 mb-4">
+        <div v-if="subscriptionLoaded" class="card shadow-sm rounded-3 mb-4">
           <div class="card-header d-flex justify-content-between align-items-center">
             <div>
               <strong>Payment Statement</strong>
-              <div class="small text-muted">Payments applied to this subscription</div>
+              <div class="small text-muted">Payments & claims for this subscription</div>
             </div>
             <div>
-              <b-button size="sm" variant="outline-secondary" @click="loadPayments">Refresh</b-button>
+              <b-button size="sm" variant="outline-secondary" @click="refreshAll">Refresh</b-button>
             </div>
           </div>
 
           <div class="card-body p-0">
-            <div v-if="paymentsLoading" class="p-3 text-center text-muted">Loading payments…</div>
+            <div v-if="paymentsLoading || claimsLoading" class="p-3 text-center text-muted">Loading transactions…</div>
 
             <div v-else>
-              <div v-if="!payments || !payments.length" class="p-3 text-center text-muted">No payments recorded.</div>
+              <div v-if="!payments.length && !claims.length" class="p-3 text-center text-muted">No payments or claims recorded.</div>
 
               <div v-else class="table-responsive">
                 <table class="table table-sm mb-0">
                   <thead class="thead-light">
                     <tr>
                       <th>Date</th>
-                      <th>Reference</th>
-                      <th>Method</th>
-                      <th>Note</th>
-                      <th>Amount</th>
+                      <th>Type</th>
+                      <th>Reference / Notes</th>
+                      <th class="text-right">Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="p in payments" :key="p.id">
-                      <td>{{ formatDateTime(p.created_at || p.paid_at || p.date) }}</td>
-                      <td>{{ p.reference || p.transaction_id || '—' }}</td>
-                      <td>{{ p.method || p.payment_method || '—' }}</td>
-                      <td>{{ p.note || p.notes || '—' }}</td>
-                      <td>{{ money(p.amount || p.value || p.total || 0) }}</td>
+                    <!-- Payments (increase balance) -->
+                    <tr v-for="p in payments" :key="'p'+p.id">
+                      <td>{{ formatDateTime(p.paid_at || p.created_at || p.date) }}</td>
+                      <td><span class="badge badge-success">Payment</span> — {{ p.payment_method || p.method || p.method_display || '—' }}</td>
+                      <td>{{ p.transaction_ref }} - {{ p.note }}</td>
+                      <td class="text-right text-success">+ {{ money(p.amount || p.value || p.total || 0) }}</td>
+                    </tr>
+
+                    <!-- Policy claims (reduce balance) -->
+                    <tr v-for="c in claims" :key="'c'+c.id" class="table-warning">
+                      <td>{{ formatDateTime(c.created_at || c.claimed_at || c.date) }}</td>
+                      <td><span class="badge badge-danger">Claim</span></td>
+                      <td>{{ c.claim_category + ' - Claim for ' + (c.claim_holder_first_name || '') + ' ' + (c.claim_holder_last_name || '') }}</td>
+                      <td class="text-right text-danger">- {{ money(c.amount || 0) }}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -235,9 +244,14 @@
 
               <div class="p-3 d-flex justify-content-end">
                 <div class="text-right">
-                  <div class="mr-4 small text-muted">Total paid: {{ money(subscription.total_paid_amount || 0) }}</div>
-                  <div class="mr-4 small text-muted">Total claims: {{ money(totalClaims) }}</div>
-                  <div class="mr-4 small text-muted">Available balance: {{ money(balance) }}</div>
+                  <div class="small text-muted">Total paid</div>
+                  <div class="h6 mb-0">{{ money(totalPayments) }}</div>
+                  <div class="small text-muted mt-2">Total claims</div>
+                  <div class="h6 mb-0">{{ money(totalClaims) }}</div>
+                  <div class="small text-muted mt-2">Policy balance</div>
+                  <div class="h4 mb-0">{{ money(policyBalance) }}</div>
+                  <div class="small text-muted mt-2">Monthly total (owner + dependents)</div>
+                  <div class="h5 mb-0">{{ money(monthlyTotal) }}</div>
                 </div>
               </div>
             </div>
@@ -245,8 +259,8 @@
         </div>
 
         <!-- Actions -->
-        <div class="mb-5 d-flex justify-content-end">
-          <b-button variant="success" :disabled="subscription.status === 'lapsed'" @click="openAddPayment"><span class="fa fa-credit-card" /> Add Payment</b-button>
+        <div class="mb-5 d-flex justify-content-end" v-if="subscriptionLoaded">
+          <b-button variant="success" @click="openAddPayment"><span class="fa fa-credit-card" /> Add Payment</b-button>
         </div>
       </div>
     </div>
@@ -261,9 +275,12 @@ export default {
   data() {
     return {
       subscription: {},
+      subscriptionLoaded: false,
       payments: [],
+      claims: [],
       loading: false,
       paymentsLoading: false,
+      claimsLoading: false,
 
       // add payment form state
       paymentForm: {
@@ -308,37 +325,38 @@ export default {
       return this.subscription.dependents.length;
     },
     ownerMonthly() {
-      // If the backend already gives monthly_total per subscription, prefer that for ownerMonthly calculation fallback:
-      if (this.subscription && this.subscription.monthly_total) {
-        // monthly_total is for entire subscription; ownerMonthly should be part of it. Keep fallback simple:
-        return Number(this.subscription.monthly_total) || 0;
+      // Use subscription.monthly_total if provided (preferred)
+      if (this.subscription && (this.subscription.monthly_total || this.subscription.monthly_total === 0)) {
+        return Number(this.subscription.monthly_total);
       }
       if (!this.subscription || !this.subscription.plan || !this.subscription.patient) return 0;
       const plan = this.subscription.plan;
       const age = this.ageFromDate(this.subscription.patient.date_of_birth);
       return Number(age >= 18 ? (plan.price_adult || 0) : (plan.price_child || 0));
     },
+    monthlyTotal() {
+      // Sum owner + dependents prices (best effort)
+      let total = 0;
+      total += Number(this.ownerMonthly || 0);
+      if (Array.isArray(this.subscription.dependents)) {
+        for (const d of this.subscription.dependents) {
+          total += Number(this.dependentMonthly(d) || 0);
+        }
+      }
+      return Number(total);
+    },
     totalPayments() {
-      return (this.payments || []).reduce((s, p) => s + Number(p.amount || p.value || p.total || 0), 0);
+      return (this.payments || []).reduce((s, p) => s + Number(p.amount || p.value || 0), 0);
+    },
+    totalClaims() {
+      return (this.claims || []).reduce((s, c) => s + Number(c.amount || 0), 0);
+    },
+    policyBalance() {
+      return Number((this.totalPayments || 0) - (this.totalClaims || 0));
     },
     validPaymentForm() {
       return this.paymentForm.amount && Number(this.paymentForm.amount) > 0 && this.paymentForm.method;
-    },
-    totalClaims() {
-    // if subscription includes claims
-    if (this.subscription && Array.isArray(this.subscription.claims)) {
-      return this.subscription.claims.reduce((s, c) => s + Number(c.amount || 0), 0);
     }
-    // fallback to API-sourced computed number you may fetch separately
-    return 0;
-  },
-
-  balance() {
-    // available balance = total_paid_amount - total_claims
-    const paid = Number(this.subscription.total_paid_amount || 0);
-    const claims = Number(this.totalClaims || 0);
-    return (paid - claims).toFixed(2);
-  }
   },
   methods: {
     loadSubscription() {
@@ -350,6 +368,7 @@ export default {
         return;
       }
       const url = (this.$base_url ? this.$base_url : "") + "subscriptions/" + id;
+      console.info(`[InsurancePage] fetching subscription from: ${url}`);
       this.$axios.get(url, authHeader())
         .then(({ data }) => {
           let sub = null;
@@ -358,8 +377,11 @@ export default {
           else if (data && data.id) sub = data;
           else sub = data;
           this.subscription = sub || {};
+          this.subscriptionLoaded = true;
           this.loading = false;
+          // load transactions
           this.loadPayments();
+          this.loadClaims();
         })
         .catch((err) => {
           this.loading = false;
@@ -369,18 +391,13 @@ export default {
     },
 
     loadPayments() {
-      if (this.subscription && Array.isArray(this.subscription.payments) && this.subscription.payments.length) {
-        this.payments = this.subscription.payments;
-        return;
-      }
-      const id = this.subscription && this.subscription.id ? this.subscription.id : (this.$route.params.insurance || this.$route.params.subscription);
-      if (!id) {
+      if (!this.subscription || !this.subscription.id) {
         this.payments = [];
         return;
       }
       this.paymentsLoading = true;
-      const tryUrl = (this.$base_url ? this.$base_url : "") + "subscriptions/" + id + "/payments";
-      const fallbackUrl = (this.$base_url ? this.$base_url : "") + "payments?subscription_id=" + id;
+      const tryUrl = (this.$base_url ? this.$base_url : "") + "subscriptions/" + this.subscription.id + "/payments";
+      const fallbackUrl = (this.$base_url ? this.$base_url : "") + "payments?subscription_id=" + this.subscription.id;
 
       this.$axios.get(tryUrl, authHeader())
         .then(({ data }) => {
@@ -390,6 +407,7 @@ export default {
           else this.payments = [];
         })
         .catch(() => {
+          // fallback try
           this.$axios.get(fallbackUrl, authHeader())
             .then(({ data }) => {
               if (Array.isArray(data)) this.payments = data;
@@ -402,9 +420,41 @@ export default {
         .finally(() => { this.paymentsLoading = false; });
     },
 
+    loadClaims() {
+      if (!this.subscription || !this.subscription.id) {
+        this.claims = [];
+        return;
+      }
+      this.claimsLoading = true;
+      // Try endpoint: subscriptions/{id}/claims (recommended)
+      const tryUrl = (this.$base_url ? this.$base_url : "") + "subscriptions/" + this.subscription.id + "/claims";
+      // Fallback: policy_claims?subscription_id=...
+      const fallbackUrl = (this.$base_url ? this.$base_url : "") + "policy_claims?subscription_id=" + this.subscription.id;
+
+      this.$axios.get(tryUrl, authHeader())
+        .then(({ data }) => {
+          if (Array.isArray(data)) this.claims = data;
+          else if (data && data.data && Array.isArray(data.data)) this.claims = data.data;
+          else if (data && data.claims && Array.isArray(data.claims)) this.claims = data.claims;
+          else this.claims = [];
+        })
+        .catch(() => {
+          this.$axios.get(fallbackUrl, authHeader())
+            .then(({ data }) => {
+              if (Array.isArray(data)) this.claims = data;
+              else if (data && data.data && Array.isArray(data.data)) this.claims = data.data;
+              else this.claims = [];
+            })
+            .catch(() => { this.claims = []; })
+            .finally(() => { this.claimsLoading = false; });
+        })
+        .finally(() => { this.claimsLoading = false; });
+    },
+
     dependentMonthly(d) {
       if (!d) return 0;
-      const plan = d.plan || (d.plan_id ? this.subscription.plan : null);
+      // Prefer embedded plan object
+      const plan = d.plan || (d.plan_id ? this.subscription.plan : null) || null;
       if (!plan) return 0;
       const age = this.ageFromDate(d.date_of_birth);
       return Number(age >= 18 ? (plan.price_adult || 0) : (plan.price_child || 0));
@@ -446,82 +496,27 @@ export default {
       if (isNaN(d.getTime())) return val;
       return d.toLocaleString("en-AU", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     },
+    capFirst(v) {
+    if (v === null || typeof v === 'undefined') return '';
+    const s = String(v);
+    if (!s.length) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  },
 
-    capFirst(s) {
-      if (!s) return "";
-      return String(s).charAt(0).toUpperCase() + String(s).slice(1);
-    },
-
-    subscriptionStatusClass(status) {
-      const s = (status) ? String(this.subscription.status).toLowerCase() : "";
-      if (s === "active" || s === "paid" || s === "completed") return "badge-success";
-      if (s === "covered") return "badge-info";
-      if (s === "pending" || s === "due") return "badge-warning";
+    subscriptionStatusClass() {
+      const s = (this.subscription && this.subscription.status) ? String(this.subscription.status).toLowerCase() : "";
+      if (s === "active" || s === "paid" || s === "covered" || s === "completed") return "badge-success";
+      if (s === "pending" || s === "due" || s === "lapsed") return "badge-warning";
       if (s === "lapsed" || s === "closed" || s === "cancelled") return "badge-danger";
       return "badge-secondary";
     },
 
-    paymentStatusClass(s) {
-      const v = (s || "").toString().toLowerCase();
-      if (v === "success" || v === "paid" || v === "completed") return "badge-success";
-      if (v === "pending") return "badge-warning";
-      if (v === "failed" || v === "cancelled") return "badge-danger";
-      return "badge-secondary";
-    },
-
-    goToPatientPrescriptions() {
-      if (!this.subscription.patient) return;
-      this.$router.push({ name: "patientprescriptions", params: { patient: this.subscription.patient.id } }).catch(()=>{});
-    },
-
-    goToAddPayment() {
-      const id = this.subscription && this.subscription.id;
-      if (!id) return;
-      this.openAddPayment();
-    },
-
-    fullName(p) {
-      if (!p) return "—";
-      return ((p.first_name || "") + " " + (p.last_name || "")).trim() || "—";
-    },
-
     /* ===== Add payment modal helpers ===== */
     openAddPayment() {
-      // prefill amount suggestion (ownerMonthly + dependents)
+      // prefill amount suggestion as monthlyTotal
       this.paymentError = null;
-
-      // If backend provides subscription.monthly_total use it (prefer), else compute
-      const backendTotal = this.subscription && (this.subscription.monthly_total || this.subscription.monthly_amount || this.subscription.monthly);
-      if (typeof backendTotal !== "undefined" && backendTotal !== null && backendTotal !== "") {
-        // try parse number safely
-        const n = Number(backendTotal);
-        this.paymentForm.amount = isNaN(n) ? null : n;
-      } else {
-        // compute owner + dependents
-        let total = 0;
-        // ownerMonthly may be a fallback that returns the whole subscription monthly_total; ensure we compute properly:
-        try {
-          // If subscription.plan & patient exist, compute owner's price
-          if (this.subscription && this.subscription.plan && this.subscription.patient && this.subscription.patient.date_of_birth) {
-            const plan = this.subscription.plan;
-            const age = this.ageFromDate(this.subscription.patient.date_of_birth);
-            total += Number(age >= 18 ? (plan.price_adult || 0) : (plan.price_child || 0));
-          } else if (this.ownerMonthly) {
-            total += Number(this.ownerMonthly || 0);
-          }
-
-          // dependents
-          if (this.subscription && Array.isArray(this.subscription.dependents)) {
-            this.subscription.dependents.forEach(d => {
-              total += Number(this.dependentMonthly(d) || 0);
-            });
-          }
-        } catch (e) {
-          // fallback safety
-        }
-        this.paymentForm.amount = Number(total) || null;
-      }
-
+      // If there is an outstanding monthly amount you want to suggest, use monthlyTotal
+      this.paymentForm.amount = Number(this.monthlyTotal || 0);
       this.paymentForm.method = "";
       this.paymentForm.reference = "";
       this.paymentForm.note = "";
@@ -546,39 +541,30 @@ export default {
         amount: Number(this.paymentForm.amount),
         payment_method: this.paymentForm.method,
         reference: this.paymentForm.reference || null,
-        note: this.paymentForm.note || null
+        note: this.paymentForm.note || null,
+        paid_at: new Date().toISOString()
       };
 
       const url = (this.$base_url ? this.$base_url : "") + "subscriptions/" + subscriptionId + "/payments";
 
       this.$axios.post(url, payload, authHeader())
         .then(({ data }) => {
-          // If API returns the new payment object, merge; otherwise reload payments
-          if (data && (data.payment || data.data || data)) {
-            // Try to extract created payment
-            let created = null;
-            if (data.payment) created = data.payment;
-            else if (data.data && Array.isArray(data.data)) created = data.data[0] || null;
-            else if (data.data && data.data.id) created = data.data;
-            else if (data.id) created = data;
-            if (created) {
-              // prepend to payments list
-              this.payments = [created].concat(this.payments || []);
-            } else {
-              // fallback reload
-              this.loadPayments();
-            }
-            this.$refs.modalAddPayment.hide();
-            this.$swal("Success", "Payment recorded successfully.", "success");
-            // reload subscription (so totals update)
-            this.loadSubscription();
+          // Attempt to extract created payment object
+          let created = null;
+          if (data && data.payment) created = data.payment;
+          else if (data && data.data && data.data.id) created = data.data;
+          else if (data && data.id) created = data;
+          // If we got a created object, prepend; otherwise reload
+          if (created) {
+            this.payments = [created].concat(this.payments || []);
           } else {
-            // fallback: reload payments
             this.loadPayments();
-            this.$refs.modalAddPayment.hide();
-            this.$swal("Success", "Payment recorded successfully.", "success");
-            this.loadSubscription();
           }
+          // close modal and reload subscription to refresh totals
+          this.$refs.modalAddPayment.hide();
+          this.$swal("Success", "Payment recorded successfully.", "success");
+          // refresh subscription and transactions
+          this.loadSubscription();
         })
         .catch((err) => {
           console.error("Payment error:", err);
@@ -590,6 +576,13 @@ export default {
         .finally(() => {
           this.paymentSubmitting = false;
         });
+    },
+
+    refreshAll() {
+      this.loadPayments();
+      this.loadClaims();
+      // optionally reload subscription
+      this.loadSubscription();
     }
   },
 
@@ -610,7 +603,5 @@ export default {
 .table th, .table td { vertical-align: middle; }
 .small { font-size: 0.85rem; }
 .font-weight-medium { font-weight: 600; }
-
-/* modal form tweaks */
-.modal-body .form-control { min-height: 38px; }
+.table-warning td { background: #fff7e6 !important; }
 </style>

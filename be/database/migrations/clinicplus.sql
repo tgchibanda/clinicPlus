@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 30, 2025 at 11:54 PM
+-- Generation Time: Oct 16, 2025 at 01:42 PM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 7.4.30
 
@@ -44,6 +44,34 @@ CREATE TABLE `bookings` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `booking_payments`
+--
+
+CREATE TABLE `booking_payments` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `consultation_id` bigint(20) UNSIGNED NOT NULL,
+  `insurance_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `transaction_ref` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `raw_payload` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT 'processed',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `booking_payments`
+--
+
+INSERT INTO `booking_payments` (`id`, `consultation_id`, `insurance_id`, `amount`, `payment_method`, `transaction_ref`, `raw_payload`, `status`, `created_at`, `updated_at`) VALUES
+(1, 35, NULL, '15.00', 'cash', NULL, NULL, 'processed', '2025-10-15 03:28:58', '2025-10-15 03:28:58'),
+(2, 35, 2, '5.00', 'policy_claim', 'policy_claim#10', NULL, 'processed', '2025-10-15 03:28:58', '2025-10-15 03:28:58'),
+(3, 36, NULL, '20.00', 'mixed', 'Cash and transfer', NULL, 'processed', '2025-10-15 03:35:56', '2025-10-15 03:35:56');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `consultations`
 --
 
@@ -79,7 +107,13 @@ INSERT INTO `consultations` (`id`, `patient_id`, `user_id`, `location_id`, `star
 (21, 4, 2, 3, '2025-09-21 22:30:00', '2025-09-21 13:00:00', 3, 'Same issues', 'Not very happy with his life', '24.00', NULL, NULL, NULL, NULL, NULL, '0', NULL, NULL, '2025-09-21 11:54:13', '2025-09-21 11:54:13'),
 (22, 6, 2, 3, '2025-09-23 22:00:00', '2025-09-23 12:30:00', 3, 'Test reason', 'Test special instructions', '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'Cash', NULL, '2025-09-23 02:53:26', '2025-09-23 02:53:26'),
 (23, 5, 2, 3, '2025-09-23 22:30:00', '2025-09-23 13:00:00', 1, 'Pain in the gut', 'May need a hoist', '45.00', NULL, 'He just needed todrink more water', 'Pain was just minor', 'There are not investigations to do', 'He should drink aloe', '4', 'Cash', NULL, '2025-09-23 02:55:43', '2025-09-23 02:57:50'),
-(24, 5, 2, 3, '2025-09-26 01:30:00', '2025-09-25 16:00:00', 3, 'asdfa', 'sdfas', '20.00', NULL, 'asdf', 'asdf', 'asdf', 'asdf', '4', 'Cash', NULL, '2025-09-23 03:15:06', '2025-09-23 03:16:07');
+(24, 5, 2, 3, '2025-09-26 01:30:00', '2025-09-25 16:00:00', 3, 'asdfa', 'sdfas', '20.00', NULL, 'asdf', 'asdf', 'asdf', 'asdf', '4', 'Cash', NULL, '2025-09-23 03:15:06', '2025-09-23 03:16:07'),
+(31, 3, 2, 3, '2025-10-15 03:30:00', '2025-10-14 18:00:00', 1, 'asdAa A', NULL, '20.00', NULL, NULL, NULL, NULL, NULL, 'booked', 'policy_claim', NULL, '2025-10-15 01:40:44', '2025-10-15 01:40:44'),
+(32, 3, 2, 1, '2025-10-16 03:30:00', '2025-10-15 18:00:00', 3, 'fg sdfg sdf', 'g sdfg sdfg sdfg s', '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'policy_claim', NULL, '2025-10-15 02:11:41', '2025-10-15 02:11:41'),
+(33, 3, 2, 1, '2025-10-22 22:30:00', '2025-10-22 13:00:00', 3, 'jhg', 'jhg', '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'policy_claim', NULL, '2025-10-15 02:27:30', '2025-10-15 02:27:30'),
+(34, 3, 2, 1, '2025-10-23 01:30:00', '2025-10-22 16:00:00', 3, 'jhvmv', 'jhvmj', '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'mixed', NULL, '2025-10-15 03:15:01', '2025-10-15 03:15:01'),
+(35, 3, 2, 3, '2025-10-15 05:00:00', '2025-10-14 19:30:00', 1, 'kljklj', 'kjhkj', '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'cash', NULL, '2025-10-15 03:28:58', '2025-10-15 03:28:58'),
+(36, 2, 2, 3, '2025-10-31 01:30:00', '2025-10-30 16:00:00', 3, 'asdf', NULL, '20.00', NULL, NULL, NULL, NULL, NULL, '0', 'cash', NULL, '2025-10-15 03:35:56', '2025-10-15 03:35:56');
 
 -- --------------------------------------------------------
 
@@ -152,7 +186,7 @@ INSERT INTO `drugs` (`id`, `name`, `batch_number`, `description`, `category`, `s
 (2, 'Metformin', 'B1', 'First-line medication for type 2 diabetes; helps control blood sugar levels by improving insulin sensitivity.', 'Antidiabetic', '20.00', 0, 10, 'pieces', '2027-12-08', NULL, '2025-09-19 19:03:20'),
 (3, 'Amoxicillin', 'B1', 'Treats bacterial infections such as ear, throat, chest, and urinary tract infections. Not effective against viral illnesses.', 'Antibiotic', '23.00', 7, 6, 'bottle', '2025-09-30', '2025-09-22 03:07:39', '2025-09-23 03:13:51'),
 (4, 'Amoxicillin', 'B2', 'Treats bacterial infections such as ear, throat, chest, and urinary tract infections. Not effective against viral illnesses.', 'Antibiotic', '24.00', 10, 20, 'bottle', '2028-09-07', '2025-09-22 03:42:18', '2025-09-22 03:42:18'),
-(5, 'Amlodipine', 'B1', 'Used to manage high blood pressure and angina; relaxes blood vessels to improve blood flow.', 'Antihypertensive', '30.00', 50, 30, 'bottle', '2027-09-09', '2025-09-22 03:57:44', '2025-09-22 03:57:44'),
+(5, 'Amlodipine', 'B1', 'Used to manage high blood pressure and angina; relaxes blood vessels to improve blood flow.', 'Antihypertensive', '30.00', 49, 30, 'bottle', '2027-09-09', '2025-09-22 03:57:44', '2025-10-16 00:26:18'),
 (6, 'Salbutamol', 'B1', 'Provides quick relief for asthma and chronic obstructive pulmonary disease (COPD) by relaxing airway muscles.', 'Bronchodilator', '20.00', 98, 20, 'tea bags', '2029-09-14', '2025-09-22 04:00:50', '2025-09-23 03:13:51');
 
 -- --------------------------------------------------------
@@ -209,8 +243,9 @@ CREATE TABLE `insurance_dependents` (
 --
 
 INSERT INTO `insurance_dependents` (`id`, `subscription_id`, `first_name`, `last_name`, `date_of_birth`, `gender`, `plan_id`, `relationship`, `created_at`, `updated_at`) VALUES
-(1, 1, 'asdf', 'asdf', '1991-11-11', 'male', 3, NULL, '2025-09-30 11:42:36', '2025-09-30 11:42:36'),
-(2, 2, 'sadfasd', 'fasdfasdf', '1991-11-02', 'female', 2, NULL, '2025-09-30 11:48:43', '2025-09-30 11:48:43');
+(1, 1, 'Tinashe', 'Tembo', '1991-11-11', 'male', 3, NULL, '2025-09-30 11:42:36', '2025-09-30 11:42:36'),
+(2, 2, 'Fadzayi', 'Chikara', '1991-11-02', 'female', 2, NULL, '2025-09-30 11:48:43', '2025-09-30 11:48:43'),
+(3, 3, 'Chido', 'Mutetwa', '1998-02-10', 'female', 2, NULL, '2025-10-01 03:40:54', '2025-10-01 03:40:54');
 
 -- --------------------------------------------------------
 
@@ -232,7 +267,21 @@ CREATE TABLE `insurance_events` (
 
 INSERT INTO `insurance_events` (`id`, `subscription_id`, `type`, `payload`, `created_at`) VALUES
 (1, 1, 'subscription_created', '{\"patient_id\":2,\"dependents_count\":1}', '2025-09-30 11:42:36'),
-(2, 2, 'subscription_created', '{\"patient_id\":3,\"dependents_count\":1}', '2025-09-30 11:48:43');
+(2, 2, 'subscription_created', '{\"patient_id\":3,\"dependents_count\":1}', '2025-09-30 11:48:43'),
+(3, 2, 'payment_recorded', '{\"amount\":\"20.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-01 02:44:52'),
+(4, 2, 'payment_recorded', '{\"amount\":\"13.00\",\"payment_method\":\"bank_transfer\",\"recorded_by\":null}', '2025-10-01 02:46:11'),
+(5, 1, 'payment_recorded', '{\"amount\":\"10.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-01 03:28:30'),
+(6, 3, 'subscription_created', '{\"patient_id\":6,\"dependents_count\":1}', '2025-10-01 03:40:54'),
+(7, 3, 'payment_recorded', '{\"amount\":\"45.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-01 03:44:18'),
+(8, 3, 'payment_recorded', '{\"amount\":\"18.00\",\"payment_method\":\"mobile\",\"recorded_by\":null}', '2025-10-01 03:45:14'),
+(9, 3, 'payment_recorded', '{\"amount\":\"63.00\",\"payment_method\":\"mobile\",\"recorded_by\":null}', '2025-10-01 03:46:54'),
+(10, 4, 'subscription_created', '{\"patient_id\":5,\"dependents_count\":0}', '2025-10-12 22:41:05'),
+(11, 4, 'payment_recorded', '{\"amount\":\"80.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-12 23:38:46'),
+(12, 2, 'payment_recorded', '{\"amount\":\"33.00\",\"payment_method\":\"bank_transfer\",\"recorded_by\":null}', '2025-10-13 01:45:09'),
+(13, 4, 'payment_recorded', '{\"amount\":\"80.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-13 01:46:30'),
+(14, 1, 'second_reminder_sent', '{\"due_count\":2}', '2025-10-13 02:10:06'),
+(15, 1, 'second_reminder_sent', '{\"due_count\":2}', '2025-10-13 02:41:30'),
+(16, 2, 'payment_recorded', '{\"amount\":\"33.00\",\"payment_method\":\"cash\",\"recorded_by\":null}', '2025-10-15 19:03:17');
 
 -- --------------------------------------------------------
 
@@ -248,10 +297,26 @@ CREATE TABLE `insurance_payments` (
   `transaction_ref` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `paid_at` datetime NOT NULL,
   `status` enum('pending','completed','failed','refunded') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
-  `raw_payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`raw_payload`)),
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `note` text COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `insurance_payments`
+--
+
+INSERT INTO `insurance_payments` (`id`, `subscription_id`, `amount`, `payment_method`, `transaction_ref`, `paid_at`, `status`, `created_at`, `updated_at`, `note`) VALUES
+(1, 2, '20.00', 'cash', NULL, '2025-10-01 12:44:51', 'completed', '2025-10-01 02:44:51', '2025-10-01 02:44:51', 'First cash payment'),
+(2, 2, '13.00', 'bank_transfer', NULL, '2025-10-01 12:46:11', 'completed', '2025-10-01 02:46:11', '2025-10-01 02:46:11', 'Balance payment'),
+(3, 1, '10.00', 'cash', 'Bond Cash', '2025-10-01 13:28:30', 'completed', '2025-10-01 03:28:30', '2025-10-01 03:28:30', NULL),
+(4, 3, '45.00', 'cash', 'Cash in USD', '2025-10-01 13:44:18', 'completed', '2025-10-01 03:44:18', '2025-10-01 03:44:18', NULL),
+(5, 3, '18.00', 'mobile', 'Ecocash', '2025-10-01 13:45:14', 'completed', '2025-10-01 03:45:14', '2025-10-01 03:45:14', NULL),
+(6, 3, '63.00', 'mobile', NULL, '2025-10-01 13:46:54', 'completed', '2025-10-01 03:46:54', '2025-10-01 03:46:54', NULL),
+(7, 4, '80.00', 'cash', 'Ecocash', '2025-10-13 09:38:46', 'completed', '2025-10-12 23:38:46', '2025-10-12 23:38:46', NULL),
+(8, 2, '33.00', 'bank_transfer', NULL, '2025-10-13 11:45:08', 'completed', '2025-10-13 01:45:08', '2025-10-13 01:45:08', NULL),
+(9, 4, '80.00', 'cash', 'Trans 2', '2025-10-13 11:46:30', 'completed', '2025-10-13 01:46:30', '2025-10-13 01:46:30', NULL),
+(10, 2, '33.00', 'cash', 'Ecocash', '2025-10-16 05:03:15', 'completed', '2025-10-15 19:03:16', '2025-10-15 19:03:16', 'He came in');
 
 -- --------------------------------------------------------
 
@@ -290,15 +355,17 @@ INSERT INTO `insurance_plans` (`id`, `slug`, `name`, `description`, `price_adult
 
 CREATE TABLE `insurance_subscriptions` (
   `id` bigint(20) UNSIGNED NOT NULL,
+  `policy_number` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `patient_id` bigint(20) UNSIGNED NOT NULL,
   `plan_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `status` enum('pending','active','lapsed','closed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `status` enum('pending','active','lapsed','closed','covered') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
   `started_at` datetime NOT NULL,
   `coverage_starts_at` datetime DEFAULT NULL,
   `first_payment_at` datetime DEFAULT NULL,
   `last_payment_at` datetime DEFAULT NULL,
   `total_paid_amount` decimal(12,2) NOT NULL DEFAULT 0.00,
   `due_count` int(11) NOT NULL DEFAULT 0,
+  `last_notification` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `next_due_date` date NOT NULL,
   `notes` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
@@ -309,9 +376,11 @@ CREATE TABLE `insurance_subscriptions` (
 -- Dumping data for table `insurance_subscriptions`
 --
 
-INSERT INTO `insurance_subscriptions` (`id`, `patient_id`, `plan_id`, `status`, `started_at`, `coverage_starts_at`, `first_payment_at`, `last_payment_at`, `total_paid_amount`, `due_count`, `next_due_date`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 2, 5, 'pending', '2025-09-30 21:42:36', NULL, NULL, NULL, '0.00', 0, '2025-10-30', NULL, '2025-09-30 11:42:36', '2025-09-30 11:42:36'),
-(2, 3, 2, 'pending', '2025-09-30 21:48:43', NULL, NULL, NULL, '0.00', 0, '2025-10-30', NULL, '2025-09-30 11:48:43', '2025-09-30 11:48:43');
+INSERT INTO `insurance_subscriptions` (`id`, `policy_number`, `patient_id`, `plan_id`, `status`, `started_at`, `coverage_starts_at`, `first_payment_at`, `last_payment_at`, `total_paid_amount`, `due_count`, `last_notification`, `next_due_date`, `notes`, `created_at`, `updated_at`) VALUES
+(1, 'N1', 2, 5, 'lapsed', '2025-09-30 21:42:36', NULL, '2025-06-01 13:28:30', '2025-07-01 13:28:30', '10.00', 2, 'second', '2025-08-30', NULL, '2025-09-30 11:42:36', '2025-10-13 02:41:27'),
+(2, 'N2', 3, 2, 'covered', '2025-09-30 21:48:43', '2025-12-30 21:48:43', '2025-10-01 12:44:51', '2025-10-16 05:03:15', '99.00', 0, '', '2026-03-02', NULL, '2025-09-30 11:48:43', '2025-10-15 19:03:16'),
+(3, 'N3', 6, 3, 'covered', '2025-10-01 13:40:54', '2026-01-01 13:40:54', '2025-10-01 13:44:18', '2025-10-01 13:46:54', '126.00', 0, '', '2026-02-01', NULL, '2025-10-01 03:40:54', '2025-10-01 03:46:54'),
+(4, 'N4', 5, 4, 'active', '2025-10-13 08:41:05', NULL, '2025-10-13 09:38:46', '2025-10-13 11:46:30', '160.00', 0, '', '2026-01-13', NULL, '2025-10-12 22:41:05', '2025-10-13 01:46:30');
 
 -- --------------------------------------------------------
 
@@ -423,7 +492,9 @@ INSERT INTO `jobs` (`id`, `queue`, `payload`, `attempts`, `reserved_at`, `availa
 (86, 'default', '{\"uuid\":\"c6274cd4-6f60-4a3a-bf55-1c85b53e42e0\",\"displayName\":\"App\\\\Jobs\\\\SendEmail\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendEmail\",\"command\":\"O:18:\\\"App\\\\Jobs\\\\SendEmail\\\":10:{s:10:\\\"\\u0000*\\u0000details\\\";a:3:{s:5:\\\"email\\\";s:20:\\\"tgchibanda@gmail.com\\\";s:7:\\\"subject\\\";s:21:\\\"clinicPlus OTP bHVZ5t\\\";s:4:\\\"data\\\";a:3:{s:4:\\\"name\\\";s:15:\\\"clinicPlus User\\\";s:5:\\\"email\\\";s:20:\\\"tgchibanda@gmail.com\\\";s:4:\\\"data\\\";s:18:\\\"Your OTP is bHVZ5t\\\";}}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1759269033, 1759269033),
 (87, 'default', '{\"uuid\":\"d431e767-1349-483c-9814-571aacba080e\",\"displayName\":\"App\\\\Jobs\\\\SendEmail\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendEmail\",\"command\":\"O:18:\\\"App\\\\Jobs\\\\SendEmail\\\":10:{s:10:\\\"\\u0000*\\u0000details\\\";a:3:{s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:7:\\\"subject\\\";s:25:\\\"clinicPlus OTP generated \\\";s:4:\\\"data\\\";a:3:{s:4:\\\"name\\\";s:15:\\\"clinicPlus User\\\";s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:4:\\\"data\\\";s:44:\\\"tgchibanda@gmail.com generated OTP is bHVZ5t\\\";}}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1759269033, 1759269033),
 (88, 'default', '{\"uuid\":\"930aeefa-d469-434b-92a4-f46c80417e92\",\"displayName\":\"App\\\\Jobs\\\\SendEmail\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendEmail\",\"command\":\"O:18:\\\"App\\\\Jobs\\\\SendEmail\\\":10:{s:10:\\\"\\u0000*\\u0000details\\\";a:3:{s:5:\\\"email\\\";s:20:\\\"tgchibanda@gmail.com\\\";s:7:\\\"subject\\\";s:21:\\\"clinicPlus OTP 5pauAb\\\";s:4:\\\"data\\\";a:3:{s:4:\\\"name\\\";s:15:\\\"clinicPlus User\\\";s:5:\\\"email\\\";s:20:\\\"tgchibanda@gmail.com\\\";s:4:\\\"data\\\";s:18:\\\"Your OTP is 5pauAb\\\";}}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1759269034, 1759269034),
-(89, 'default', '{\"uuid\":\"6de68f87-d333-48f7-a690-d13a5e09f213\",\"displayName\":\"App\\\\Jobs\\\\SendEmail\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendEmail\",\"command\":\"O:18:\\\"App\\\\Jobs\\\\SendEmail\\\":10:{s:10:\\\"\\u0000*\\u0000details\\\";a:3:{s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:7:\\\"subject\\\";s:25:\\\"clinicPlus OTP generated \\\";s:4:\\\"data\\\";a:3:{s:4:\\\"name\\\";s:15:\\\"clinicPlus User\\\";s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:4:\\\"data\\\";s:44:\\\"tgchibanda@gmail.com generated OTP is 5pauAb\\\";}}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1759269034, 1759269034);
+(89, 'default', '{\"uuid\":\"6de68f87-d333-48f7-a690-d13a5e09f213\",\"displayName\":\"App\\\\Jobs\\\\SendEmail\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":null,\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"App\\\\Jobs\\\\SendEmail\",\"command\":\"O:18:\\\"App\\\\Jobs\\\\SendEmail\\\":10:{s:10:\\\"\\u0000*\\u0000details\\\";a:3:{s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:7:\\\"subject\\\";s:25:\\\"clinicPlus OTP generated \\\";s:4:\\\"data\\\";a:3:{s:4:\\\"name\\\";s:15:\\\"clinicPlus User\\\";s:5:\\\"email\\\";s:18:\\\"icarezim@gmail.com\\\";s:4:\\\"data\\\";s:44:\\\"tgchibanda@gmail.com generated OTP is 5pauAb\\\";}}s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1759269034, 1759269034),
+(90, 'default', '{\"uuid\":\"7a9940e9-583f-481b-b366-6ee6236ddb06\",\"displayName\":\"App\\\\Notifications\\\\OverduePaymentNotification\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":\"\",\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"Illuminate\\\\Notifications\\\\SendQueuedNotifications\",\"command\":\"O:48:\\\"Illuminate\\\\Notifications\\\\SendQueuedNotifications\\\":14:{s:11:\\\"notifiables\\\";O:45:\\\"Illuminate\\\\Contracts\\\\Database\\\\ModelIdentifier\\\":4:{s:5:\\\"class\\\";s:18:\\\"App\\\\Models\\\\Patient\\\";s:2:\\\"id\\\";a:1:{i:0;i:2;}s:9:\\\"relations\\\";a:0:{}s:10:\\\"connection\\\";s:5:\\\"mysql\\\";}s:12:\\\"notification\\\";O:44:\\\"App\\\\Notifications\\\\OverduePaymentNotification\\\":12:{s:15:\\\"\\u0000*\\u0000subscription\\\";O:45:\\\"Illuminate\\\\Contracts\\\\Database\\\\ModelIdentifier\\\":4:{s:5:\\\"class\\\";s:32:\\\"App\\\\Models\\\\InsuranceSubscription\\\";s:2:\\\"id\\\";i:1;s:9:\\\"relations\\\";a:2:{i:0;s:7:\\\"patient\\\";i:1;s:4:\\\"plan\\\";}s:10:\\\"connection\\\";s:5:\\\"mysql\\\";}s:15:\\\"\\u0000*\\u0000reminderType\\\";s:6:\\\"second\\\";s:2:\\\"id\\\";s:36:\\\"008b2e99-bd31-4e48-9368-f0f0a95b3c7a\\\";s:6:\\\"locale\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}s:8:\\\"channels\\\";a:1:{i:0;s:4:\\\"mail\\\";}s:5:\\\"tries\\\";N;s:7:\\\"timeout\\\";N;s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1760359290, 1760359290),
+(91, 'default', '{\"uuid\":\"f5f88fdf-61a0-490c-b84b-2b2367cb14eb\",\"displayName\":\"App\\\\Notifications\\\\OverduePaymentNotification\",\"job\":\"Illuminate\\\\Queue\\\\CallQueuedHandler@call\",\"maxTries\":null,\"maxExceptions\":null,\"backoff\":\"\",\"timeout\":null,\"retryUntil\":null,\"data\":{\"commandName\":\"Illuminate\\\\Notifications\\\\SendQueuedNotifications\",\"command\":\"O:48:\\\"Illuminate\\\\Notifications\\\\SendQueuedNotifications\\\":14:{s:11:\\\"notifiables\\\";O:45:\\\"Illuminate\\\\Contracts\\\\Database\\\\ModelIdentifier\\\":4:{s:5:\\\"class\\\";s:18:\\\"App\\\\Models\\\\Patient\\\";s:2:\\\"id\\\";a:1:{i:0;i:2;}s:9:\\\"relations\\\";a:0:{}s:10:\\\"connection\\\";s:5:\\\"mysql\\\";}s:12:\\\"notification\\\";O:44:\\\"App\\\\Notifications\\\\OverduePaymentNotification\\\":12:{s:15:\\\"\\u0000*\\u0000subscription\\\";O:45:\\\"Illuminate\\\\Contracts\\\\Database\\\\ModelIdentifier\\\":4:{s:5:\\\"class\\\";s:32:\\\"App\\\\Models\\\\InsuranceSubscription\\\";s:2:\\\"id\\\";i:1;s:9:\\\"relations\\\";a:2:{i:0;s:7:\\\"patient\\\";i:1;s:4:\\\"plan\\\";}s:10:\\\"connection\\\";s:5:\\\"mysql\\\";}s:15:\\\"\\u0000*\\u0000reminderType\\\";s:6:\\\"second\\\";s:2:\\\"id\\\";s:36:\\\"008b2e99-bd31-4e48-9368-f0f0a95b3c7a\\\";s:6:\\\"locale\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}s:8:\\\"channels\\\";a:1:{i:0;s:5:\\\"nexmo\\\";}s:5:\\\"tries\\\";N;s:7:\\\"timeout\\\";N;s:3:\\\"job\\\";N;s:10:\\\"connection\\\";N;s:5:\\\"queue\\\";N;s:15:\\\"chainConnection\\\";N;s:10:\\\"chainQueue\\\";N;s:19:\\\"chainCatchCallbacks\\\";N;s:5:\\\"delay\\\";N;s:10:\\\"middleware\\\";a:0:{}s:7:\\\"chained\\\";a:0:{}}\"}}', 0, NULL, 1760359290, 1760359290);
 
 -- --------------------------------------------------------
 
@@ -475,7 +546,38 @@ INSERT INTO `medical_histories` (`id`, `consultation_id`, `history`, `created_at
 (11, 21, 'This is the second time', '2025-09-21 11:54:13', '2025-09-21 11:54:13'),
 (12, 22, 'Test medical history', '2025-09-23 02:53:26', '2025-09-23 02:53:26'),
 (13, 23, 'This person has never been to the hospital', '2025-09-23 02:55:43', '2025-09-23 02:55:43'),
-(14, 24, 'saf', '2025-09-23 03:15:06', '2025-09-23 03:15:06');
+(14, 24, 'saf', '2025-09-23 03:15:06', '2025-09-23 03:15:06'),
+(15, 32, 's we efg', '2025-10-15 02:11:41', '2025-10-15 02:11:41'),
+(16, 33, 'jhgkjhgkjh', '2025-10-15 02:27:30', '2025-10-15 02:27:30'),
+(17, 34, 'sdfasdf', '2025-10-15 03:15:01', '2025-10-15 03:15:01'),
+(18, 35, 'jhk', '2025-10-15 03:28:58', '2025-10-15 03:28:58');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `medication_payments`
+--
+
+CREATE TABLE `medication_payments` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `consultation_id` bigint(20) UNSIGNED NOT NULL,
+  `insurance_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_method` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `transaction_ref` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `raw_payload` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT 'processed',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `medication_payments`
+--
+
+INSERT INTO `medication_payments` (`id`, `consultation_id`, `insurance_id`, `amount`, `payment_method`, `transaction_ref`, `raw_payload`, `status`, `created_at`, `updated_at`) VALUES
+(6, 24, 2, '13.00', 'policy_claim', 'policy_claim#15', NULL, 'processed', '2025-10-16 00:26:18', '2025-10-16 00:26:18'),
+(7, 24, NULL, '17.00', 'mixed', 'bond and usd', NULL, 'processed', '2025-10-16 00:26:18', '2025-10-16 00:26:18');
 
 -- --------------------------------------------------------
 
@@ -539,7 +641,10 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (52, '2025_09_22_112058_remove_payment_fields_from_patients_table', 10),
 (53, '2025_09_22_112151_add_payment_method_to_consultations_table', 10),
 (54, '2025_09_22_131934_add_batch_number_to_drugs_table', 11),
-(55, '2025_09_30_092207_create_insurance_plans_table', 12);
+(55, '2025_09_30_092207_create_insurance_plans_table', 12),
+(56, '2025_10_01_125326_add_note_to_insurance_payments_table', 13),
+(57, '2025_10_13_132420_create_policy_claims_table', 14),
+(59, '2025_10_15_124738_create_booking_payments_table', 15);
 
 -- --------------------------------------------------------
 
@@ -758,11 +863,11 @@ CREATE TABLE `patients` (
 
 INSERT INTO `patients` (`id`, `first_name`, `last_name`, `phone`, `email`, `date_of_birth`, `gender`, `address`, `emergency_contact`, `assigned_doctor_id`, `status`, `user_id`, `visit_date`, `created_at`, `updated_at`) VALUES
 (1, 'Ari', 'Ella', '6956785678', 'ari@gmail.com', '2025-09-01', 'female', 'Pelican road', '098656', 1, 'waiting', 2, '2025-09-17 12:14:37', NULL, '2025-09-20 18:57:17'),
-(2, 'Takunda', 'Chibanda', '0459825176', 'tgchibanda@gmail.com', '2025-09-02', 'male', '35 PELICAN ROAD TOWNVIEW  MOUNT ISA QLD 4825 Australia', NULL, NULL, 'waiting', 2, '2025-09-17 13:11:38', '2025-09-17 03:11:38', '2025-09-20 18:51:17'),
-(3, 'Munya', 'Chisvo', '0459000000', 'muny@gmail.com', '2025-08-31', 'male', '35 PELICAN ROAD TOWNVIEW  MOUNT ISA QLD 4825 Australia', NULL, NULL, 'waiting', 2, '2025-09-17 13:13:26', '2025-09-17 03:13:26', '2025-09-20 18:31:29'),
+(2, 'Takunda', 'Chibanda', '0459825176', 'tgchibanda@gmail.com', '2025-09-02', 'male', '35 PELICAN ROAD TOWNVIEW  MOUNT ISA QLD 4825 Australia', NULL, 3, 'booked', 2, '2025-09-17 13:11:38', '2025-09-17 03:11:38', '2025-10-15 03:35:56'),
+(3, 'Munya', 'Chisvo', '0459000000', 'muny@gmail.com', '2025-08-31', 'male', '35 PELICAN ROAD TOWNVIEW  MOUNT ISA QLD 4825 Australia', NULL, 1, 'booked', 2, '2025-09-17 13:13:26', '2025-09-17 03:13:26', '2025-10-15 03:28:58'),
 (4, 'Ziso', 'Mbune', '0776665556', 'xi@gmail.com', '2024-09-09', 'female', '35 PELICAN ROAD TOWNVIEW  MOUNT ISA QLD 4825 Australia', NULL, 3, 'booked', 2, '2025-09-17 13:17:16', '2025-09-17 03:17:16', '2025-09-21 11:54:13'),
-(5, 'Raviro', 'Mika', '0772773747', 'ravi@gmail.com', '2008-09-02', 'male', '4004 indsor park Harare', NULL, 3, 'completed', 2, '2025-09-22 11:25:34', '2025-09-22 01:25:34', '2025-09-23 03:16:41'),
-(6, 'Melisa', 'Dube', '0775777888', 'mel@gmail.com', '2025-08-04', 'male', '34 Hoolands Norton', NULL, 3, 'booked', 2, '2025-09-22 11:30:36', '2025-09-22 01:30:36', '2025-09-23 02:53:26');
+(5, 'Raviro', 'Mika', '0779999999', 'ravi@gmail.com', '2008-09-02', 'male', '4004 indsor park Harare', NULL, 3, 'completed', 2, '2025-09-22 11:25:34', '2025-09-22 01:25:34', '2025-09-23 03:16:41'),
+(6, 'Melisa', 'Dube', '0777000000', 'mel@gmail.com', '2025-08-04', 'male', '34 Hoolands Norton', NULL, 3, 'booked', 2, '2025-09-22 11:30:36', '2025-09-22 01:30:36', '2025-09-23 02:53:26');
 
 -- --------------------------------------------------------
 
@@ -852,6 +957,39 @@ INSERT INTO `payouts` (`id`, `user_id`, `payout_batch`, `amount_net`, `amount_gr
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `policy_claims`
+--
+
+CREATE TABLE `policy_claims` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `subscription_id` bigint(20) UNSIGNED NOT NULL,
+  `consultation_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `claim_holder_first_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `claim_holder_last_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `claim_holder_dob` date DEFAULT NULL,
+  `claim_holder_relationship` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(12,2) NOT NULL DEFAULT 0.00,
+  `claim_category` text COLLATE utf8mb4_unicode_ci DEFAULT 'Consultation fee',
+  `status` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'processed',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `policy_claims`
+--
+
+INSERT INTO `policy_claims` (`id`, `subscription_id`, `consultation_id`, `claim_holder_first_name`, `claim_holder_last_name`, `claim_holder_dob`, `claim_holder_relationship`, `amount`, `claim_category`, `status`, `created_at`, `updated_at`) VALUES
+(6, 2, 31, 'Munya', 'Chisvo', '2025-08-31', 'self', '55.00', 'Consultation fee', 'processed', '2025-10-15 01:40:44', '2025-10-15 01:40:44'),
+(7, 2, 32, 'Munya', 'Chisvo', '2025-08-31', 'self', '6.00', 'Consultation fee', 'processed', '2025-10-15 02:11:41', '2025-10-15 02:11:41'),
+(8, 2, 33, 'Munya', 'Chisvo', '2025-08-31', 'self', '10.00', 'Consultation fee', 'processed', '2025-10-15 02:27:30', '2025-10-15 02:27:30'),
+(9, 2, 34, 'Munya', 'Chisvo', '2025-08-31', 'self', '10.00', 'Consultation fee', 'processed', '2025-10-15 03:15:01', '2025-10-15 03:15:01'),
+(10, 2, 35, 'Munya', 'Chisvo', '2025-08-31', 'self', '5.00', 'Consultation fee', 'processed', '2025-10-15 03:28:58', '2025-10-15 03:28:58'),
+(15, 2, 24, 'Raviro', 'Mika', '2008-09-02', 'self', '13.00', 'Medication', 'processed', '2025-10-16 00:26:18', '2025-10-16 00:26:18');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `prescriptions`
 --
 
@@ -873,7 +1011,7 @@ CREATE TABLE `prescriptions` (
 INSERT INTO `prescriptions` (`id`, `patient_id`, `consultation_id`, `doctor_id`, `notes`, `status`, `created_at`, `updated_at`) VALUES
 (12, 4, 20, 2, 'This prescription is to be webster packed', 'completed', '2025-09-21 02:01:26', '2025-09-22 04:40:37'),
 (14, 5, 23, 2, 'Notes to the phamarcy', 'partial', '2025-09-23 03:10:51', '2025-09-23 03:13:51'),
-(15, 5, 24, 2, 'asdfasdf', 'pending', '2025-09-23 03:16:41', '2025-09-23 03:16:41');
+(15, 5, 24, 2, 'asdfasdf', 'completed', '2025-09-23 03:16:41', '2025-10-16 00:26:18');
 
 -- --------------------------------------------------------
 
@@ -901,7 +1039,7 @@ INSERT INTO `prescription_items` (`id`, `prescription_id`, `drug_id`, `quantity_
 (15, 12, 1, 1, 1, 'Take one per day any time', '15.00', '2025-09-21 02:01:26', '2025-09-22 04:40:37'),
 (17, 14, 6, 3, 2, 'take on an empty', '20.00', '2025-09-23 03:10:51', '2025-09-23 03:13:51'),
 (18, 14, 3, 3, 3, 'Take with food', '23.00', '2025-09-23 03:10:51', '2025-09-23 03:13:51'),
-(19, 15, 5, 1, 0, 'asdfasdf', '30.00', '2025-09-23 03:16:41', '2025-09-23 03:16:41');
+(19, 15, 5, 1, 1, 'asdfasdf', '30.00', '2025-09-23 03:16:41', '2025-10-16 00:26:18');
 
 -- --------------------------------------------------------
 
@@ -960,7 +1098,7 @@ CREATE TABLE `sales` (
   `prescription_id` bigint(20) UNSIGNED DEFAULT NULL,
   `pharmacist_id` bigint(20) UNSIGNED NOT NULL,
   `total_amount` decimal(10,2) NOT NULL,
-  `payment_method` enum('cash','voucher') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `payment_method` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `voucher_code` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -972,7 +1110,8 @@ CREATE TABLE `sales` (
 
 INSERT INTO `sales` (`id`, `patient_id`, `prescription_id`, `pharmacist_id`, `total_amount`, `payment_method`, `voucher_code`, `created_at`, `updated_at`) VALUES
 (29, 4, 12, 2, '15.00', 'cash', NULL, '2025-09-22 04:40:37', '2025-09-22 04:40:37'),
-(30, 5, 14, 2, '109.00', 'cash', NULL, '2025-09-23 03:13:51', '2025-09-23 03:13:51');
+(30, 5, 14, 2, '109.00', 'cash', NULL, '2025-09-23 03:13:51', '2025-09-23 03:13:51'),
+(31, 5, 15, 2, '30.00', 'mixed', NULL, '2025-10-16 00:26:18', '2025-10-16 00:26:18');
 
 -- --------------------------------------------------------
 
@@ -998,7 +1137,8 @@ CREATE TABLE `sale_items` (
 INSERT INTO `sale_items` (`id`, `sale_id`, `drug_id`, `quantity`, `unit_price`, `total_price`, `created_at`, `updated_at`) VALUES
 (12, 29, 1, 1, '15.00', '15.00', '2025-09-22 04:40:37', '2025-09-22 04:40:37'),
 (13, 30, 6, 2, '20.00', '40.00', '2025-09-23 03:13:51', '2025-09-23 03:13:51'),
-(14, 30, 3, 3, '23.00', '69.00', '2025-09-23 03:13:51', '2025-09-23 03:13:51');
+(14, 30, 3, 3, '23.00', '69.00', '2025-09-23 03:13:51', '2025-09-23 03:13:51'),
+(15, 31, 5, 1, '30.00', '30.00', '2025-10-16 00:26:18', '2025-10-16 00:26:18');
 
 -- --------------------------------------------------------
 
@@ -1176,6 +1316,14 @@ ALTER TABLE `bookings`
   ADD KEY `bookings_date_location_id_index` (`date`,`location_id`);
 
 --
+-- Indexes for table `booking_payments`
+--
+ALTER TABLE `booking_payments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `booking_payments_consultation_id_index` (`consultation_id`),
+  ADD KEY `booking_payments_insurance_id_index` (`insurance_id`);
+
+--
 -- Indexes for table `consultations`
 --
 ALTER TABLE `consultations`
@@ -1255,6 +1403,7 @@ ALTER TABLE `insurance_plans`
 --
 ALTER TABLE `insurance_subscriptions`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `policy_number` (`policy_number`),
   ADD KEY `insurance_subscriptions_plan_id_foreign` (`plan_id`),
   ADD KEY `insurance_subscriptions_patient_id_index` (`patient_id`),
   ADD KEY `insurance_subscriptions_status_index` (`status`),
@@ -1278,6 +1427,12 @@ ALTER TABLE `locations`
 -- Indexes for table `medical_histories`
 --
 ALTER TABLE `medical_histories`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `medication_payments`
+--
+ALTER TABLE `medication_payments`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1363,6 +1518,14 @@ ALTER TABLE `payments`
 --
 ALTER TABLE `payouts`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `policy_claims`
+--
+ALTER TABLE `policy_claims`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `policy_claims_subscription_id_index` (`subscription_id`),
+  ADD KEY `policy_claims_consultation_id_index` (`consultation_id`);
 
 --
 -- Indexes for table `prescriptions`
@@ -1470,10 +1633,16 @@ ALTER TABLE `bookings`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `booking_payments`
+--
+ALTER TABLE `booking_payments`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `consultations`
 --
 ALTER TABLE `consultations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
 
 --
 -- AUTO_INCREMENT for table `contacts`
@@ -1509,19 +1678,19 @@ ALTER TABLE `feedback`
 -- AUTO_INCREMENT for table `insurance_dependents`
 --
 ALTER TABLE `insurance_dependents`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `insurance_events`
 --
 ALTER TABLE `insurance_events`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `insurance_payments`
 --
 ALTER TABLE `insurance_payments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `insurance_plans`
@@ -1533,13 +1702,13 @@ ALTER TABLE `insurance_plans`
 -- AUTO_INCREMENT for table `insurance_subscriptions`
 --
 ALTER TABLE `insurance_subscriptions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `jobs`
 --
 ALTER TABLE `jobs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT for table `locations`
@@ -1551,13 +1720,19 @@ ALTER TABLE `locations`
 -- AUTO_INCREMENT for table `medical_histories`
 --
 ALTER TABLE `medical_histories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `medication_payments`
+--
+ALTER TABLE `medication_payments`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `monthly_conditions`
@@ -1608,6 +1783,12 @@ ALTER TABLE `payouts`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `policy_claims`
+--
+ALTER TABLE `policy_claims`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
 -- AUTO_INCREMENT for table `prescriptions`
 --
 ALTER TABLE `prescriptions`
@@ -1641,13 +1822,13 @@ ALTER TABLE `qualifications`
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `special_areas`
@@ -1696,6 +1877,12 @@ ALTER TABLE `bookings`
   ADD CONSTRAINT `bookings_doctor_id_foreign` FOREIGN KEY (`doctor_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `bookings_location_id_foreign` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
   ADD CONSTRAINT `bookings_patient_id_foreign` FOREIGN KEY (`patient_id`) REFERENCES `patients` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `booking_payments`
+--
+ALTER TABLE `booking_payments`
+  ADD CONSTRAINT `booking_payments_consultation_id_foreign` FOREIGN KEY (`consultation_id`) REFERENCES `consultations` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `consultations`
@@ -1748,6 +1935,13 @@ ALTER TABLE `patients`
 --
 ALTER TABLE `patient_details`
   ADD CONSTRAINT `patient_details_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `policy_claims`
+--
+ALTER TABLE `policy_claims`
+  ADD CONSTRAINT `policy_claims_consultation_id_foreign` FOREIGN KEY (`consultation_id`) REFERENCES `consultations` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `policy_claims_subscription_id_foreign` FOREIGN KEY (`subscription_id`) REFERENCES `insurance_subscriptions` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `prescriptions`

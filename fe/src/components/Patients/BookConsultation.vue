@@ -113,7 +113,7 @@
         <div v-if="policy">
           <b-card class="mb-2">
             <div><strong>Policy:</strong> {{ policy.policy_number ? policy.policy_number : (policy.id || '—') }}  (<small class="text-muted">{{ (policy.plan) ? policy.plan : '—' }}</small>)</div>
-            <div class="small text-muted">Owner: {{ policy.patient ? (policy.patient.first_name + ' ' + (policy.patient.last_name || '')) : '—' }}</div>
+            <div class="small text-muted">Owner: {{ policy.patient.first_name ? (policy.patient.first_name + ' ' + (policy.patient.last_name || '')) : '—' }}</div>
             <div class="small text-muted">Available balance: {{ money(policy.available_balance || policy.balance || 0) }}</div>
           </b-card>
 
@@ -357,7 +357,7 @@ export default {
       if (!this.policySearch.number) { this.errorMessage = "Please enter policy number."; return; }
       this.policyLoading = true;
       this.errorMessage = null;
-      var url = (this.$base_url ? this.$base_url : "") + "subscription/verify-by-policy?policy_number=" + this.policySearch.number;
+      var url = (this.$base_url ? this.$base_url : "") + "subscription/verify-consultation-by-policy?policy_number=" + this.policySearch.number;
       this.$axios.get(url, authHeader())
         .then(({ data }) => {
           var payload = (data && (data.subscription || data.data || data)) || null;
