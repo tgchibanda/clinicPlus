@@ -16,6 +16,7 @@
     >
       <book-consultation
         :selectedPatient="this.selectedPatient"
+        @booked="onConsultationBooked"
       ></book-consultation>
     </b-modal>
     <b-modal id="modal-map" size="lg" title="Patient Location" hide-footer>
@@ -115,6 +116,9 @@ export default {
           this.$swal("error!", "There was an error" + error, "error");
         });
     },
+    onConsultationBooked(resp) {
+    this.loadPatients(); 
+  },
     sendInfo(item) {
       this.selectedPatient = item;
     },

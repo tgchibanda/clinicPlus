@@ -15,6 +15,7 @@ import Users from '@/pages/UserAccount/Users';
 import Consultation from '@/pages/Consultation/Consultation';
 import Patients from '@/pages/Patients/Patients';
 import Drugs from '@/pages/Drugs/Drugs';
+import Insurance from '@/pages/Insurance/Insurance';
 import Prescriptions from '@/pages/Prescriptions/Prescriptions';
 import PrescriptionPage from '@/pages/Prescriptions/PrescriptionPage';
 import DrugDetails from '@/pages/Drugs/DrugDetails';
@@ -30,6 +31,7 @@ import Reports from '@/pages/Reports/Reports';
 import Sales from '@/pages/Sales/Sales';
 import WalkInPatients from '@/pages/Patients/WalkInPatients';
 import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
+import InsurancePage from '@/pages/Insurance/InsurancePage';
 import WalkInPatientPage from '@/pages/Patients/WalkInPatientPage';
 import DrugPage from '@/pages/Drugs/DrugPage';
 import UserDetailsPage from '@/pages/UserAccount/UserDetailsPage';
@@ -183,6 +185,11 @@ export default new Router({
           component: WalkInPatientDetails,
         },
         {
+          path: 'insurance-page/:patient',
+          name: 'insurancepage',
+          component: InsurancePage,
+        },
+        {
           path: 'walk-in-patient/:patient',
           name: 'walkinpatientpage',
           component: WalkInPatientPage,
@@ -206,6 +213,11 @@ export default new Router({
           path: 'prescription/:prescription',
           name: 'prescriptionpage',
           component: PrescriptionPage,
+        },
+        {
+          path: 'insurance',
+          name: 'insurance',
+          component: Insurance,
         },
         {
           path: 'prescriptions',

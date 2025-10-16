@@ -200,7 +200,9 @@
       title="Book Consultation"
       hide-footer
     >
-      <book-consultation :selectedPatient="selectedPatient" />
+      <book-consultation 
+      :selectedPatient="selectedPatient"
+      @booked="onConsultationBooked" />
     </b-modal>
 
     <b-modal
@@ -318,6 +320,9 @@ export default {
           this.$swal("error!", "There was an error: " + msg, "error");
         });
     },
+    onConsultationBooked(resp) {
+    this.loadWalkInPatients(); 
+  },
 
     // pagination
     goToPage(page) {

@@ -97,4 +97,9 @@ class InsuranceSubscription extends Model
             'created_at' => now(),
         ]);
     }
+
+    public function claims() {
+    return $this->hasMany(PolicyClaim::class, 'subscription_id');
+    }
+
 }

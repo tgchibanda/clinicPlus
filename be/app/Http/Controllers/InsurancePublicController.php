@@ -89,7 +89,7 @@ class InsurancePublicController extends Controller
 
         try {
             $patient = Patient::findOrFail($request->patient_id);
-
+            $policy_number = $this->generatePolicyNumber();
             // Create subscription
             $subscription = InsuranceSubscription::create([
                 'patient_id' => $patient->id,
@@ -97,6 +97,7 @@ class InsurancePublicController extends Controller
                 'status' => 'pending',
                 'started_at' => now(),
                 'next_due_date' => now()->addMonth()->startOfDay(),
+                'policy_number' => $policy_number,
             ]);
 
             // Add dependents
@@ -139,6 +140,25 @@ class InsurancePublicController extends Controller
                 'message' => 'Failed to create subscription: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    private function generatePolicyNumber(string $clinicCode = 'N'): string
+    {
+        $year = now()->year;
+        $last = InsuranceSubscription::whereYear('created_at', $year)
+            ->orderByDesc('id')
+            ->first();
+
+        $seq = 1;
+        if ($last && $last->policy_number) {
+            // Try to parse trailing 4 digits
+            $tail = substr($last->policy_number, -4);
+            if (ctype_digit($tail)) {
+                $seq = (int)$tail + 1;
+            }
+        }
+
+        return sprintf('%s%s%04d', strtoupper($clinicCode), $year, $seq);
     }
 
     public function getPlans(): JsonResponse

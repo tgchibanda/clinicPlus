@@ -214,14 +214,6 @@
             </div>
           </div>
 
-          <!-- Payment method -->
-          <b-form-group label="Payment method" class="mb-3">
-            <b-form-select
-              v-model="enrollment.payment_method"
-              :options="paymentOptions"
-              class="payment-select"
-            />
-          </b-form-group>
 
           <!-- Declaration -->
           <b-form-group>
@@ -236,7 +228,7 @@
             <b-button
               size="sm"
               variant="success"
-              :disabled="submitting || !enrollment.accept_declaration || !enrollment.payment_method"
+              :disabled="submitting || !enrollment.accept_declaration"
               @click="submitEnrollment"
             >
               {{ submitting ? 'Submitting…' : 'Complete Enrollment' }}
@@ -301,8 +293,7 @@ export default {
     plans: [],
     enrollment: {
       owner_plan_id: null,
-      dependents: [],         // each dependent: { first_name, last_name, date_of_birth, gender, plan_id, relationship }
-      payment_method: "",
+      dependents: [],     
       accept_declaration: false
     },
 
@@ -513,11 +504,7 @@ export default {
         this.errorMessage = "Please accept the declaration.";
         return;
       }
-      if (!this.enrollment.payment_method) {
-        this.errorMessage = "Please select a payment method.";
-        return;
-      }
-
+      
       const http = this.$axios || (window && window.axios) || null;
       if (!http) {
         this.errorMessage = "HTTP client not available.";
@@ -529,7 +516,6 @@ export default {
         patient_id: this.selected ? this.selected.id : null,
         owner_plan_id: this.enrollment.owner_plan_id,
         dependents: this.enrollment.dependents,
-        payment_method: this.enrollment.payment_method,
         accept_declaration: this.enrollment.accept_declaration
       };
 
@@ -565,7 +551,7 @@ export default {
       this.verify = { name: "", phone: "" };
       this.matches = [];
       this.selected = null;
-      this.enrollment = { owner_plan_id: null, dependents: [], payment_method: "", accept_declaration: false };
+      this.enrollment = { owner_plan_id: null, dependents: [], accept_declaration: false };
       this.result = null;
     }
   },

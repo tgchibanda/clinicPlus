@@ -148,6 +148,15 @@
             index="prescriptions"
             isHeader
           />
+
+        <NavLink
+          :activeItem="activeItem"
+          header="Insurance"
+          link="/app/insurance"
+          iconName="flaticon-compass"
+          index="insurance"
+          isHeader
+        />
         
         <NavLink
           :activeItem="activeItem"

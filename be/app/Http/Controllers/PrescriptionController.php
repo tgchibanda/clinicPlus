@@ -75,7 +75,7 @@ class PrescriptionController extends Controller
     {
         $prescription = Prescription::findOrFail($id);
         // load relationships
-        $prescription->load('patient', 'doctor', 'items.drug');
+        $prescription->load('patient', 'doctor', 'items.drug', 'consultation');
         return response()->json([
             'success' => true,
             'message' => 'Prescription Details retrieved successfully.',

@@ -15,63 +15,108 @@ class OverduePaymentNotification extends Notification implements ShouldQueue
     protected $subscription;
     protected $reminderType;
 
-    public function __construct(InsuranceSubscription $subscription, string $reminderType = 'first')
+    public function __construct(InsuranceSubscription $subscription, $reminderType = 'first')
     {
         $this->subscription = $subscription;
         $this->reminderType = $reminderType;
     }
 
-    public function via($notifiable): array
+    // removed return type for broader compatibility
+    public function via($notifiable)
     {
         // Use SMS for second reminder onwards
         if ($this->reminderType === 'second' || $this->reminderType === 'final') {
-            return ['mail', 'nexmo']; // or 'twilio'
+            return ['mail', 'nexmo']; // or 'twilio' depending on your channels
         }
-        
+
         return ['mail'];
     }
 
-    public function toMail($notifiable): MailMessage
+    // removed return type for compatibility
+    public function toMail($notifiable)
     {
-        $monthlyTotal = $this->subscription->calculateMonthlyTotal();
-        $dueCount = $this->subscription->due_count;
+        // Make sure calculateMonthlyTotal exists on the model. If not, compute fallback.
+        $monthlyTotal = 0;
+        if (method_exists($this->subscription, 'calculateMonthlyTotal')) {
+            try {
+                $monthlyTotal = $this->subscription->calculateMonthlyTotal();
+            } catch (\Throwable $e) {
+                $monthlyTotal = $this->subscription->monthly_total ?? 0;
+            }
+        } else {
+            $monthlyTotal = $this->subscription->monthly_total ?? 0;
+        }
 
-        $subject = match($this->reminderType) {
-            'first' => 'Payment Reminder - Health Insurance Subscription',
-            'second' => 'Urgent: Payment Overdue - Health Insurance',
-            'final' => 'Final Notice - Health Insurance Payment Required',
-            default => 'Payment Reminder',
-        };
+        $dueCount = (int) ($this->subscription->due_count ?? 0);
 
-        $greeting = "Dear {$notifiable->first_name} {$notifiable->last_name},";
+        // build subject via switch (compatible)
+        switch ($this->reminderType) {
+            case 'second':
+                $subject = 'Urgent: Payment Overdue - Health Insurance';
+                break;
+            case 'final':
+                $subject = 'Final Notice - Health Insurance Payment Required';
+                break;
+            case 'first':
+            default:
+                $subject = 'Payment Reminder - Health Insurance Subscription';
+                break;
+        }
 
-        $message = match($this->reminderType) {
-            'first' => "Your health insurance payment of \${$monthlyTotal} is now overdue. Please make payment as soon as possible to keep your coverage active.",
-            'second' => "This is your second reminder. Your health insurance payment has been overdue for {$dueCount} months. Total amount due: \${$monthlyTotal * $dueCount}. Please pay immediately to avoid policy closure.",
-            'final' => "FINAL NOTICE: Your health insurance policy will be closed if payment is not received within 30 days. You have missed {$dueCount} months of payments. Total outstanding: \${$monthlyTotal * $dueCount}.",
-            default => "Please make your health insurance payment.",
-        };
+        $firstName = isset($notifiable->first_name) ? $notifiable->first_name : '';
+        $lastName = isset($notifiable->last_name) ? $notifiable->last_name : '';
+        $greeting = "Dear {$firstName} {$lastName},";
 
-        return (new MailMessage)
+        // build message via switch
+        switch ($this->reminderType) {
+            case 'second':
+                $message = "This is your second reminder. Your health insurance payment has been overdue for {$dueCount} months. Total amount due: \$" . number_format($monthlyTotal * $dueCount, 2) . ". Please pay immediately to avoid policy closure.";
+                break;
+            case 'final':
+                $message = "FINAL NOTICE: Your health insurance policy will be closed if payment is not received within 30 days. You have missed {$dueCount} months of payments. Total outstanding: \$" . number_format($monthlyTotal * $dueCount, 2) . ".";
+                break;
+            case 'first':
+            default:
+                $message = "Your health insurance payment of \$" . number_format($monthlyTotal, 2) . " is now overdue. Please make payment as soon as possible to keep your coverage active.";
+                break;
+        }
+
+        $mail = (new MailMessage)
             ->subject($subject)
             ->greeting($greeting)
             ->line($message)
             ->line("Subscription ID: {$this->subscription->id}")
-            ->line("Monthly Amount: \${$monthlyTotal}")
+            ->line("Monthly Amount: \$" . number_format($monthlyTotal, 2))
             ->line("Months Overdue: {$dueCount}")
-            ->line("Total Outstanding: \$" . ($monthlyTotal * $dueCount))
-            ->action('Make Payment', url("/insurance/payment/{$this->subscription->id}"))
-            ->line('Thank you for your prompt attention to this matter.');
+            ->line("Total Outstanding: \$" . number_format($monthlyTotal * $dueCount, 2));
+
+        // If you have a payment route in front-end, adjust below URL as needed.
+        try {
+            $mail = $mail->action('Make Payment', url("/insurance/payment/{$this->subscription->id}"));
+        } catch (\Throwable $e) {
+            // ignore URL issues in CLI environment
+        }
+
+        return $mail->line('Thank you for your prompt attention to this matter.');
     }
 
-    public function toNexmo($notifiable): array
+    public function toNexmo($notifiable)
     {
-        $monthlyTotal = $this->subscription->calculateMonthlyTotal();
-        
+        $monthlyTotal = 0;
+        if (method_exists($this->subscription, 'calculateMonthlyTotal')) {
+            try {
+                $monthlyTotal = $this->subscription->calculateMonthlyTotal();
+            } catch (\Throwable $e) {
+                $monthlyTotal = $this->subscription->monthly_total ?? 0;
+            }
+        } else {
+            $monthlyTotal = $this->subscription->monthly_total ?? 0;
+        }
+
         return [
             'from' => config('services.nexmo.sms_from'),
             'to' => $notifiable->phone,
-            'message' => "URGENT: Your health insurance payment of \${$monthlyTotal} is {$this->subscription->due_count} months overdue. Please pay immediately to avoid policy closure. Subscription ID: {$this->subscription->id}",
+            'message' => "URGENT: Your health insurance payment of \$" . number_format($monthlyTotal, 2) . " is {$this->subscription->due_count} months overdue. Please pay immediately to avoid policy closure. Subscription ID: {$this->subscription->id}",
         ];
     }
 }

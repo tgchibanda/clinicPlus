@@ -119,6 +119,20 @@
           <!-- Payment method -->
           <b-row class="mb-3">
             <b-col md="6">
+              <b-form-group label="Primary Payment Option *">
+                <b-form-select
+                  v-model="form.payment_selector"
+                  @change="onPaymentSelectorChange"
+                  required
+                >
+                  <b-form-select-option value="self">Pay directly (cash / bank / ecocash / mixed)</b-form-select-option>
+                  <b-form-select-option value="policy">Pay with policy / insurance</b-form-select-option>
+                </b-form-select>
+              </b-form-group>
+            </b-col>
+
+            <!-- When paying directly: choose method -->
+            <b-col md="6" v-if="form.payment_selector === 'self'">
               <b-form-group label="Payment Method *">
                 <b-form-select
                   v-model="form.payment_method"
@@ -126,14 +140,83 @@
                   required
                 >
                   <b-form-select-option value="cash">Cash</b-form-select-option>
-                  <b-form-select-option value="voucher">Voucher</b-form-select-option>
+                  <b-form-select-option value="bank_transfer">Bank Transfer</b-form-select-option>
+                  <b-form-select-option value="ecocash">Ecocash</b-form-select-option>
+                  <b-form-select-option value="mixed">Mixed (describe)</b-form-select-option>
                 </b-form-select>
               </b-form-group>
             </b-col>
-            <b-col md="6" v-if="form.payment_method === 'voucher'">
-              <b-form-group label="Voucher Code">
-                <b-form-input v-model="form.voucher_code" required />
+
+            <!-- Mixed description -->
+            <b-col md="12" v-if="form.payment_selector === 'self' && form.payment_method === 'mixed'">
+              <b-form-group label="Payment description (for Mixed)">
+                <b-form-input v-model="form.payment_description" placeholder="e.g. split between cash and transfer" />
               </b-form-group>
+            </b-col>
+
+            <!-- Policy flow -->
+          
+            <b-col md="12" v-if="form.payment_selector === 'policy'">
+              <b-row>
+                <b-col md="8">
+                  <b-form-group label="Policy / Subscription number">
+                    <b-form-input v-model="policyNumber" placeholder="Enter policy number" />
+                  </b-form-group>
+                </b-col>
+                <b-col md="4" class="d-flex align-items-end">
+                  <b-button :disabled="!policyNumber || verifyingPolicy" variant="primary" @click="verifyPolicy">
+                    {{ verifyingPolicy ? 'Verifying…' : 'Verify Policy' }}
+                  </b-button>
+                </b-col>
+              </b-row>
+
+              <div v-if="policyError" class="text-danger small mb-2">{{ policyError }}</div>
+
+              <div v-if="policy && policy.id" class="">
+                <div><strong>Policy #{{ policy.id }}</strong> — {{ policy.plan || '' }}</div>
+                <div class="small text-muted">Owner: {{ policy.patient_name }} • Balance: {{ formatMoney(policy.balance) }}</div>
+
+                <b-row class="mt-2">
+                  <b-col md="6">
+                    <b-form-group label="Amount to apply from policy">
+                      <b-form-input v-model.number="amountFromPolicy" type="number" :max="policy.balance" :min="0" step="0.01" :disabled="true" />
+                      <small class="text-muted">Readonly — you may adjust policy via backend. Default: min(balance, total)</small>
+                    </b-form-group>
+                  </b-col>
+
+                  <b-col md="6">
+                    <b-form-group label="Remaining to pay">
+                      <b-form-input :value="formatMoney(remainingAfterPolicy)" disabled />
+                    </b-form-group>
+                  </b-col>
+                </b-row>
+
+                <!-- If remainder > 0 allow user to pick a secondary payment -->
+                <div v-if="remainingAfterPolicy > 0" class="mt-2">
+                  <b-row>
+                    <b-col md="6">
+                      <b-form-group label="Secondary payment method">
+                        <b-form-select
+                          v-model="form.secondary_payment_method"
+                          @change="onSecondaryPaymentMethodChange"
+                        >
+                          <b-form-select-option :value="null" disabled>Select</b-form-select-option>
+                          <b-form-select-option value="cash">Cash</b-form-select-option>
+                          <b-form-select-option value="bank_transfer">Bank Transfer</b-form-select-option>
+                          <b-form-select-option value="ecocash">Ecocash</b-form-select-option>
+                          <b-form-select-option value="mixed">Mixed (describe)</b-form-select-option>
+                        </b-form-select>
+                      </b-form-group>
+                    </b-col>
+
+                    <b-col md="6" v-if="form.secondary_payment_method === 'mixed'">
+                      <b-form-group label="Secondary payment description">
+                        <b-form-input v-model="form.payment_description_secondary" placeholder="Describe mixed payment split" />
+                      </b-form-group>
+                    </b-col>
+                  </b-row>
+                </div>
+              </div>
             </b-col>
           </b-row>
 
@@ -151,7 +234,7 @@
               <b-button
                 type="button"
                 variant="success"
-                :disabled="submitting || !form.items.length || grandTotal <= 0"
+                :disabled="submitting || !form.items.length || grandTotal <= 0 || !canProcess"
                 @click="submitSale"
               >
                 <b-spinner small v-if="submitting" class="mr-1" /> Process Payment
@@ -178,7 +261,6 @@ import authHeader from "../../services/auth-header";
 
 var uid = 1;
 function mapLineFromItem(it) {
-  // Compute remaining safely from fields available
   var prescribed = Number(it.quantity_prescribed || 0);
   var dispensed = Number(it.quantity_dispensed || 0);
   var remaining = prescribed - dispensed;
@@ -192,8 +274,8 @@ function mapLineFromItem(it) {
     dosage_instructions: it.dosage_instructions || "",
     quantity_prescribed: prescribed,
     quantity_dispensed: dispensed,
-    remaining: remaining,          // shown in UI and used as max
-    quantity: remaining,           // default to pay all remaining
+    remaining: remaining,
+    quantity: remaining,
     unit_price: price,
   };
 }
@@ -211,10 +293,24 @@ export default {
       form: {
         patient_id: "",
         prescription_id: null,
-        payment_method: "cash",
-        voucher_code: "",
-        items: [], // mapped from prescription.items
+        consultation_id: null,
+        // payment_selector: 'self' or 'policy'
+        payment_selector: "self",
+        // primary for self-pay
+        payment_method: "",
+        payment_description: "",
+        // secondary when policy used
+        secondary_payment_method: null,
+        payment_description_secondary: "",
+        items: [],
       },
+
+      // policy verification state
+      policyNumber: "",
+      policy: null, // { id, subscription_id?, balance, patient_name, plan }
+      verifyingPolicy: false,
+      policyError: null,
+      amountFromPolicy: 0,
     };
   },
   computed: {
@@ -229,6 +325,32 @@ export default {
         sum += this.lineTotal(this.form.items[i]);
       }
       return sum;
+    },
+    remainingAfterPolicy() {
+      // how much remains after deducting policy portion
+      var apply = Number(this.amountFromPolicy || 0);
+      var rem = Number(this.grandTotal || 0) - apply;
+      return rem > 0 ? Number(rem.toFixed(2)) : 0;
+    },
+    canProcess() {
+      // Ensure selector specific requirements met
+      if (this.form.payment_selector === "self") {
+        if (!this.form.payment_method) return false;
+        if (this.form.payment_method === "mixed" && !this.form.payment_description) return false;
+        return true;
+      } else {
+        // policy selected
+        if (!this.policy || !this.policy.id) return false;
+        // policy amount must be set (we set default) and not greater than balance
+        if (!(Number(this.amountFromPolicy) >= 0)) return false;
+        if (Number(this.amountFromPolicy) > Number(this.policy.balance || 0)) return false;
+        // if remainder exists, a secondary payment method must be chosen
+        if (this.remainingAfterPolicy > 0) {
+          if (!this.form.secondary_payment_method) return false;
+          if (this.form.secondary_payment_method === "mixed" && !this.form.payment_description_secondary) return false;
+        }
+        return true;
+      }
     },
   },
   methods: {
@@ -256,11 +378,10 @@ export default {
             return;
           }
           _this.form.prescription_id = _this.prescription.id;
+          _this.form.consultation_id = _this.prescription.consultation.id;
           _this.form.patient_id = _this.prescription.patient_id || "";
 
-          // Map only items that have something remaining (or at least 0 to view)
           var src = (_this.prescription.items || []).map(mapLineFromItem);
-          // keep only lines with remaining > 0 (payable)
           src = src.filter(function(r) { return Number(r.remaining || 0) > 0; });
           _this.form.items = src;
         })
@@ -269,7 +390,6 @@ export default {
             (e.response && e.response.data && e.response.data.message) ||
             e.message ||
             e.toString();
-          // On hard error, bounce back
           _this.goBack();
         })
         .finally(function() {
@@ -296,8 +416,77 @@ export default {
       return "$" + n.toFixed(2);
     },
 
+    onPaymentSelectorChange() {
+      // reset policy-related fields when switching to self
+      if (this.form.payment_selector === "self") {
+        this.policy = null;
+        this.policyNumber = "";
+        this.policyError = null;
+        this.amountFromPolicy = 0;
+        this.form.secondary_payment_method = null;
+        this.form.payment_description_secondary = "";
+      }
+    },
+
     onPaymentMethodChange() {
-      if (this.form.payment_method !== "voucher") this.form.voucher_code = "";
+      if (this.form.payment_method !== "mixed") this.form.payment_description = "";
+    },
+
+    onSecondaryPaymentMethodChange() {
+      if (this.form.secondary_payment_method !== "mixed") this.form.payment_description_secondary = "";
+    },
+
+    // verify policy endpoint — adjust URL if your backend route differs
+    verifyPolicy() {
+      this.policyError = null;
+      this.policy = null;
+
+      if (!this.policyNumber) {
+        this.policyError = "Please enter a policy/subscription number to verify.";
+        return;
+      }
+
+      this.verifyingPolicy = true;
+      const url = (this.$base_url ? this.$base_url : "") + "subscription/verify-by-policy?policy_number=" + encodeURIComponent(this.policyNumber);
+
+      this.$axios.get(url, authHeader())
+        .then(({ data }) => {
+          // expect { success: true, data: { id, subscription_id?, balance, patient:{...}, plan } }
+          const payload = data && (data.data || data) || {};
+          // support different shapes
+          const found = payload.subscription || payload || data;
+          // sanitize fields
+          const id = found.id || found.subscription_id || found.subscription_id;
+          const balance = Number(found.balance || found.policy_balance || found.available_balance || 0);
+          const patientName = (found.patient && ((found.patient.first_name || '') + ' ' + (found.patient.last_name || ''))) || (found.patient_name || '');
+          const plan = (found.plan && (found.plan.name || found.plan)) || found.plan || '';
+
+          if (!id) {
+            this.policyError = "Policy not found or invalid response from server.";
+            return;
+          }
+
+          this.policy = {
+            id: id,
+            subscription_id: found.subscription_id || id,
+            balance: isNaN(balance) ? 0 : balance,
+            patient_name: patientName.trim(),
+            plan: plan
+          };
+
+          // default amount from policy = min(balance, grandTotal)
+          const defaultApply = Math.min(Number(this.policy.balance || 0), Number(this.grandTotal || 0));
+          this.amountFromPolicy = Number(defaultApply.toFixed(2));
+        })
+        .catch((err) => {
+          this.policyError =
+            (err.response && err.response.data && (err.response.data.message || err.response.data.error)) ||
+            err.message ||
+            "Failed to verify policy.";
+        })
+        .finally(() => {
+          this.verifyingPolicy = false;
+        });
     },
 
     // Submit
@@ -309,12 +498,15 @@ export default {
         return;
       }
 
+      if (!this.canProcess) {
+        this.$swal("Validation", "Please complete payment details.", "warning");
+        return;
+      }
+
       var payload = {
         patient_id: this.form.patient_id,
         prescription_id: this.form.prescription_id,
         pharmacist_id: JSON.parse(localStorage.getItem("user")).user_id,
-        payment_method: this.form.payment_method,
-        voucher_code: this.form.payment_method === "voucher" ? this.form.voucher_code : null,
         items: this.form.items
           .filter(function(r) { return Number(r.quantity || 0) > 0; })
           .map(function(r) {
@@ -327,8 +519,52 @@ export default {
         total_amount: this.grandTotal,
       };
 
+      // build payments + policy_claim according to selection
+      var payments = [];
+      var policy_claim = null;
+
+      if (this.form.payment_selector === 'self') {
+        // single payment - method could be mixed (we just send the method + description)
+        payments.push({
+          method: this.form.payment_method,
+          amount: Number(this.grandTotal),
+          description: (this.form.payment_method === 'mixed') ? (this.form.payment_description || null) : null
+        });
+      } else {
+        // policy selected
+        var fromPolicy = Number(this.amountFromPolicy || 0);
+        if (fromPolicy > 0 && this.policy && (this.policy.id || this.policy.subscription_id)) {
+          var subscriptionId = this.policy.subscription_id || this.policy.id;
+          policy_claim = {
+            subscription_id: subscriptionId,
+            amount: fromPolicy,
+            claim_for: {
+              first_name: this.prescription.patient && this.prescription.patient.first_name ? this.prescription.patient.first_name : null,
+              last_name: this.prescription.patient && this.prescription.patient.last_name ? this.prescription.patient.last_name : null,
+              date_of_birth: this.prescription.patient && this.prescription.patient.date_of_birth ? this.prescription.patient.date_of_birth : null,
+              relationship: 'self'
+            },
+            note: null
+          };
+        }
+
+        var remainder = Math.max(0, this.grandTotal - fromPolicy);
+        if (remainder > 0) {
+          payments.push({
+            method: this.form.secondary_payment_method || 'cash',
+            amount: Number(remainder.toFixed(2)),
+            description: (this.form.secondary_payment_method === 'mixed') ? (this.form.payment_description_secondary || null) : null
+          });
+        }
+      }
+
+      if (payments.length) payload.payments = payments;
+      if (policy_claim) payload.policy_claim = policy_claim;
+
       var _this = this;
       this.submitting = true;
+      this.errorMessage = null;
+
       this.$axios
         .post(this.$base_url + "sales", payload, authHeader())
         .then(function() {
@@ -360,7 +596,6 @@ export default {
     },
   },
   created() {
-    // Only prescription mode; go back if none
     var prescriptionId =
       this.$route.params.id ||
       this.$route.params.prescription ||

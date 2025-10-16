@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class Patient extends Model
 {
     use HasFactory;
+    use Notifiable;
 
     protected $fillable = [
         'first_name', 'last_name', 'phone', 'email', 'date_of_birth',
