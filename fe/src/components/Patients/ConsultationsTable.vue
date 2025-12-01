@@ -58,6 +58,7 @@
               <th>Phone</th>
               <th>Doctor</th>
               <th>Date</th>
+              <th>Location</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -70,7 +71,7 @@
               <td>{{ row.patient.phone }}</td>
               <td>{{ row.doctor ? row.doctor.name : '—' }}</td>
               <td>{{ formatDate(row.start_at) }}</td>
-
+              <td>{{ row.location.name }}</td>
               <td>
                 <span class="badge" :class="{
                   'bg-success': row.status === '4',
@@ -232,6 +233,8 @@ export default {
             status: c.status || "pending",
             start_at: c.start_at,
             end_at: c.end_at,
+            location_id: c.location_id,
+            location: c.location,
           }));
 
           this.currentPage = 1;

@@ -21,7 +21,7 @@ class ConsultationController extends Controller
     public function consultationsReport(Request $request)
     {
         $query = Consultation::query()
-            ->with(['doctor', 'patient']); // adjust relationships
+            ->with(['doctor', 'patient', 'location']); // adjust relationships
 
         // Filter by doctor
         if ($request->doctor_id) {
