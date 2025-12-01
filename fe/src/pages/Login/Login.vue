@@ -98,7 +98,7 @@ export default {
             window.localStorage.setItem("authenticated", true);
             window.localStorage.setItem("otpStatus", false);
 
-            this.$router.push("/app/dashboard");
+            this.$router.push("/app/reports");
           },
           (error) => {
             this.loading = false;
@@ -117,7 +117,7 @@ export default {
   },
   created() {
     if (window.localStorage.getItem("authenticated") === "true") {
-      this.$router.push("/app/dashboard");
+      this.$router.push("/app/reports");
     }
   },
 };

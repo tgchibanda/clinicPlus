@@ -19,7 +19,7 @@ export default {
       user_id: JSON.parse(localStorage.getItem("user")).user_id,
       payment: {
         amount: 20,
-        return_url: "https://clinicPluszimbabwe.com/#/app/dashboard",
+        return_url: "https://clinicPluszimbabwe.com/#/app/reports",
         user_id: JSON.parse(localStorage.getItem("user")).user_id,
       },
     };

@@ -6,7 +6,7 @@
       @mouseleave="sidebarMouseLeave"
     >
       <header class="logo">
-        <router-link to="/app/dashboard"
+        <router-link to="/app/reports"
           ><span class="primary-word">clinicPlus</span> App</router-link
         >
       </header>
@@ -17,51 +17,12 @@
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"
-          link="/app/dashboard"
+          link="/app/reports"
           iconName="flaticon-home"
           index="dashboard"
           isHeader
         />
-        <NavLink
-          :activeItem="activeItem"
-          header="Consultation"
-          link="/app/consultation"
-          iconName="flaticon-list"
-          index="consultation"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="My Patients"
-          link="/app/patients"
-          iconName="flaticon-user-6"
-          index="patients"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Payments"
-          link="/app/my-payments"
-          iconName="flaticon-database-1"
-          index="my-payments"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="My Account"
-          link="/app/account"
-          iconName="flaticon-user"
-          index="account"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Directory"
-          link="/app/directory"
-          iconName="flaticon-compass"
-          index="directory"
-          isHeader
-        />
+        
       </ul>
       <ul
         class="nav"
@@ -70,43 +31,12 @@
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"
-          link="/app/dashboard"
+          link="/app/reports"
           iconName="flaticon-home"
           index="dashboard"
           isHeader
         />
-        <NavLink
-          :activeItem="activeItem"
-          header="Consultation"
-          link="/app/consultation"
-          iconName="flaticon-list"
-          index="consultation"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Payments"
-          link="/app/my-payments"
-          iconName="flaticon-database-1"
-          index="my-payments"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="My Account"
-          link="/app/account"
-          iconName="flaticon-user"
-          index="account"
-          isHeader
-        />
-        <NavLink
-          :activeItem="activeItem"
-          header="Directory"
-          link="/app/directory"
-          iconName="flaticon-compass"
-          index="directory"
-          isHeader
-        />
+        
       </ul>
       <ul
         class="nav"
@@ -121,6 +51,15 @@
           index="dashboard"
           isHeader
         />
+
+        <NavLink
+            :activeItem="activeItem"
+            header="Consultations"
+            link="/app/consultations"
+            iconName="flaticon-compass"
+            index="consultations"
+            isHeader
+          />
 
         <NavLink
             :activeItem="activeItem"
@@ -158,15 +97,6 @@
           isHeader
         />
         
-        <NavLink
-          :activeItem="activeItem"
-          header="Condition of the month"
-          link="/app/condition"
-          iconName="flaticon-eyeglasses"
-          index="condition"
-          isHeader
-        />
-
         <NavLink
           :activeItem="activeItem"
           header="Users"
@@ -210,14 +140,7 @@
           isHeader
         />
       </ul>
-      <!-- <ul class="nav" v-if="isMobile">
-        <li class="headerLink">
-          <a @click="logout" class="sidebar-link"
-            ><span class="icon"><i class="fi flaticon-compass"></i></span>
-            Logout
-          </a>
-        </li>
-      </ul> -->
+      
     </nav>
   </div>
 </template>

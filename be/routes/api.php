@@ -70,6 +70,7 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     // Consultations
     
     Route::apiResources(['consultation' => 'ConsultationController']);
+    Route::get('/consultations-report', [ConsultationController::class, 'consultationsReport']);
     Route::get('walk-in-patient/{patient}/consultation_history', [ConsultationController::class, 'byPatient']);
     Route::get('/getconsultation/{id}', ['uses' => 'ConsultationController@getConsultation']);
     Route::get('/consultation_details/{account}/{id}', ['uses' => 'ConsultationController@consultationDetails']);

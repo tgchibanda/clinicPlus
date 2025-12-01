@@ -18,6 +18,39 @@ use App\Models\BookingPayment;
 
 class ConsultationController extends Controller
 {
+    public function consultationsReport(Request $request)
+    {
+        $query = Consultation::query()
+            ->with(['doctor', 'patient']); // adjust relationships
+
+        // Filter by doctor
+        if ($request->doctor_id) {
+            $query->where('doctor_id', $request->doctor_id);
+        }
+
+        // Filter by patient name
+        if ($request->patient_name) {
+            $query->whereHas('patient', function ($q) use ($request) {
+                $q->where('name', 'LIKE', '%'.$request->patient_name.'%');
+            });
+        }
+
+        // Filter by date range
+        if ($request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        // Order newest first
+        $query->orderBy('created_at', 'desc');
+
+        return response()->json([
+            'data' => $query->paginate(20)
+        ]);
+    }
 
     public function store(Request $request)
 {
