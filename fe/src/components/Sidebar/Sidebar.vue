@@ -6,14 +6,13 @@
       @mouseleave="sidebarMouseLeave"
     >
       <header class="logo">
-        <router-link to="/app/reports"
-          ><span class="primary-word">clinicPlus</span> App</router-link
-        >
+        <router-link to="/app/reports">
+          <span class="primary-word">clinicPlus</span> App
+        </router-link>
       </header>
-      <ul
-        class="nav"
-        v-if="userRole.status == 'active' && userRole.role == 'user'"
-      >
+
+      <!-- USER -->
+      <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'user'">
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"
@@ -22,12 +21,10 @@
           index="dashboard"
           isHeader
         />
-        
       </ul>
-      <ul
-        class="nav"
-        v-if="userRole.status == 'active' && userRole.role == 'doctor'"
-      >
+
+      <!-- DOCTOR -->
+      <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'doctor'">
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"
@@ -36,13 +33,11 @@
           index="dashboard"
           isHeader
         />
-        
       </ul>
-      <ul
-        class="nav"
-        v-if="userRole.status == 'active' && userRole.role == 'admin'"
-      >
-           
+
+      <!-- ADMIN -->
+      <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'admin'">
+        
         <NavLink
           :activeItem="activeItem"
           header="Dashboard"
@@ -53,40 +48,40 @@
         />
 
         <NavLink
-            :activeItem="activeItem"
-            header="Consultations"
-            link="/app/consultations"
-            iconName="flaticon-compass"
-            index="consultations"
-            isHeader
-          />
+          :activeItem="activeItem"
+          header="Consultations"
+          link="/app/consultations"
+            iconName="flaticon-calendar"
+          index="consultations"
+          isHeader
+        />
 
         <NavLink
-            :activeItem="activeItem"
-            header="Patients"
-            link="/app/walkinpatients"
-            iconName="flaticon-compass"
-            index="walkinpatients"
-            isHeader
-          />
+          :activeItem="activeItem"
+          header="Patients"
+          link="/app/walkinpatients"
+            iconName="flaticon-user-6"
+          index="walkinpatients"
+          isHeader
+        />
 
         <NavLink
-            :activeItem="activeItem"
-            header="Pharmacy"
-            link="/app/drugs"
-            iconName="flaticon-compass"
-            index="drugs"
-            isHeader
-          />
+          :activeItem="activeItem"
+          header="Pharmacy"
+          link="/app/drugs"
+            iconName="flaticon-list"
+          index="drugs"
+          isHeader
+        />
 
         <NavLink
-            :activeItem="activeItem"
-            header="Prescription Payments"
-            link="/app/prescriptions"
-            iconName="flaticon-compass"
-            index="prescriptions"
-            isHeader
-          />
+          :activeItem="activeItem"
+          header="Prescription Payments"
+          link="/app/prescriptions"
+            iconName="flaticon-database-1"
+          index="prescriptions"
+          isHeader
+        />
 
         <NavLink
           :activeItem="activeItem"
@@ -96,33 +91,28 @@
           index="insurance"
           isHeader
         />
-        
+
         <NavLink
           :activeItem="activeItem"
           header="Users"
           link="/app/users"
-          iconName="flaticon-user-4"
+          iconName="flaticon-user-3"
           index="users"
           isHeader
         />
-        
+
         <NavLink
           :activeItem="activeItem"
           header="Directory"
           link="/app/AddDirectory"
-          iconName="flaticon-compass"
+          iconName="flaticon-folder"
           index="AddDirectory"
           isHeader
         />
       </ul>
-      <ul
-        class="nav"
-        v-if="
-          userRole.status == 'inactive' ||
-          userRole.status == 'pending' ||
-          userRole.status == null
-        "
-      >
+
+      <!-- INACTIVE / PENDING -->
+      <ul class="nav" v-if="userRole.status == 'inactive' || userRole.status == 'pending' || userRole.status == null">
         <NavLink
           :activeItem="activeItem"
           header="My Account"
@@ -131,6 +121,7 @@
           index="account"
           isHeader
         />
+
         <NavLink
           :activeItem="activeItem"
           header="Directory"
@@ -140,7 +131,7 @@
           isHeader
         />
       </ul>
-      
+
     </nav>
   </div>
 </template>
@@ -159,22 +150,6 @@ export default {
     return {
       userRole: userRole(),
       isMobile: isMobile(),
-      alerts: [
-        {
-          id: 0,
-          title: "Sales Report",
-          value: 15,
-          footer: "Calculating x-axis bias... 65%",
-          color: "danger",
-        },
-        {
-          id: 1,
-          title: "Personal Responsibility",
-          value: 20,
-          footer: "Provide required notes",
-          color: "primary",
-        },
-      ],
     };
   },
   methods: {
@@ -197,23 +172,11 @@ export default {
       }
     },
     logout() {
-      this.$store.dispatch("auth/logout").then(
-        (res) => {
-          window.localStorage.setItem("authenticated", false);
-          window.localStorage.setItem("user", false);
-          this.$router.push("/login");
-        },
-        (error) => {
-          this.loading = false;
-          this.message =
-            (error.response &&
-              error.response.data &&
-              error.response.data.message) ||
-            error.message ||
-            error.toString();
-          this.errorMessage = this.message;
-        }
-      );
+      this.$store.dispatch("auth/logout").then(() => {
+        localStorage.setItem("authenticated", false);
+        localStorage.setItem("user", false);
+        this.$router.push("/login");
+      });
     },
   },
   created() {
@@ -229,5 +192,4 @@ export default {
 };
 </script>
 
-<!-- Sidebar styles should be scoped -->
-<style src="./Sidebar.scss" lang="scss" scoped/>
+<style src="./Sidebar.scss" lang="scss" scoped />

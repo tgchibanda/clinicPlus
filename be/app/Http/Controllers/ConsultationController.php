@@ -87,21 +87,18 @@ class ConsultationController extends Controller
 
     // Overlap check (same as you already have)
     $overlap = \App\Models\Consultation::where('doctor_id', $doctor->id)
-        ->where(function ($q) use ($start, $end) {
-            $q->whereBetween('start_at', [$start, $end])
-              ->orWhereBetween('end_at', [$start, $end])
-              ->orWhere(function ($qq) use ($start, $end) {
-                  $qq->where('start_at', '<=', $start)
-                     ->where('end_at', '>=', $end);
-              });
-        })->exists();
+    ->where(function ($q) use ($start, $end) {
+        $q->where('start_at', '<', $end)
+          ->where('end_at', '>', $start);
+    })
+    ->exists();
 
-    if ($overlap) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Selected time overlaps with an existing booking for this doctor.',
-        ], 422);
-    }
+if ($overlap) {
+    return response()->json([
+        'success' => false,
+        'message' => 'Selected time overlaps with an existing booking for this doctor.',
+    ], 422);
+}
 
     // Super doctor single-location-per-day check (unchanged)
     if ((bool)($doctor->is_super_doctor ?? false)) {
