@@ -56,7 +56,7 @@
     </b-container>
     <footer class="auth-footer">
       <cookie-law theme="dark-lime"></cookie-law>
-      2021 &copy; clinicPlus App Developed By
+      2025 &copy; clinicPlus App Developed By
       <a
         rel="nofollow noopener noreferrer"
         target="_blank"
