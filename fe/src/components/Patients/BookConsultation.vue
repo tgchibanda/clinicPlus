@@ -385,15 +385,29 @@ money(value) {
   },
     handleSubmit() {
       if (!this.canSubmit) return;
-      this.submitting = true;
-      this.errorMessage = null;
+  this.submitting = true;
+  this.errorMessage = null;
 
-      var dateStr = this.form.date;
-      var timeStr = this.form.time;
-      var startAt = dateStr + "T" + timeStr + ":00";
-      var startDateObj = new Date(startAt);
-      var endDateObj = new Date(startDateObj.getTime() + 30 * 60000);
-      var endAt = endDateObj.toISOString().slice(0,19);
+  const dateStr = this.form.date;   // "2025-12-31"
+  const timeStr = this.form.time;   // "11:30"
+
+  // Build start datetime in local timezone
+  const startAt = `${dateStr} ${timeStr}:00`;
+
+  const startDateObj = new Date(`${dateStr}T${timeStr}:00`);
+
+  // Add 30 minutes
+  const endDateObj = new Date(startDateObj.getTime() + 30 * 60000);
+
+  // Format end_at as "YYYY-MM-DD HH:mm:ss"
+  const pad = (n) => (n < 10 ? "0" + n : n);
+  const endAt =
+    `${endDateObj.getFullYear()}-` +
+    `${pad(endDateObj.getMonth() + 1)}-` +
+    `${pad(endDateObj.getDate())} ` +
+    `${pad(endDateObj.getHours())}:` +
+    `${pad(endDateObj.getMinutes())}:` +
+    `00`;
 
       var payload = {
         user_id: JSON.parse(localStorage.getItem("user")).user_id,

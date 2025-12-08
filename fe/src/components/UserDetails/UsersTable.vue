@@ -3,20 +3,24 @@
     <vue-element-loading
       :active="isLoading"
       :is-full-screen="true"
-      :size="'80'"
-      :color="'#FF6700'"
-      :text="'Please wait while you are redirected'"
+      size="80"
+      color="#FF6700"
+      text="Please wait while you are redirected"
     />
-    <b-modal id="modal-map" size="lg" title="Patient Location">
-      <!-- <book-consultation></book-consultation> -->
-      <!-- <patient-details></patient-details> -->
-    </b-modal>
+
     <Widget
-      title="<h5>System <span class='fw-semi-bold'>Users</span></h5>"
+      title="System Users"
       bodyClass="widget-table-overflow"
       customHeader
-      :fetchingData="this.loading"
+      :fetchingData="loading"
     >
+      <!-- Add User Button -->
+      <div class="mb-3 text-right">
+        <b-button variant="success" @click="goToAddUser">
+          <i class="fa fa-plus"></i> Add User
+        </b-button>
+      </div>
+
       <div class="table-responsive">
         <table class="table table-striped table-lg mb-0 requests-table">
           <thead>
@@ -24,7 +28,7 @@
               <th>Fullname</th>
               <th>Email</th>
               <th>Role</th>
-              <th>status</th>
+              <th>Status</th>
               <th>View</th>
             </tr>
           </thead>
@@ -33,13 +37,12 @@
               <td>{{ row.name }}</td>
               <td>{{ row.email }}</td>
               <td>{{ row.role }}</td>
-
               <td>
                 <b-badge
                   :variant="
-                    row.status == 'pending'
+                    row.status === 'pending'
                       ? 'danger'
-                      : row.status == 'active'
+                      : row.status === 'active'
                       ? 'success'
                       : 'info'
                   "
@@ -49,9 +52,9 @@
                 </b-badge>
               </td>
               <td>
-                <b-button variant="primary" @click="viewDetails(row)"
-                  ><span class="fa fa-search-plus" /> View Details</b-button
-                >
+                <b-button variant="primary" @click="viewDetails(row)">
+                  <i class="fa fa-search-plus"></i> View Details
+                </b-button>
               </td>
             </tr>
           </tbody>
@@ -69,11 +72,8 @@ export default {
   name: "UsersTable",
   data() {
     return {
-      errorMessage: null,
       loading: false,
-      user_id: JSON.parse(localStorage.getItem("user")).user_id,
       UserDetails: {},
-      timer: "",
       user_role: userRole(),
       isLoading: false,
     };
@@ -88,18 +88,23 @@ export default {
           this.loading = false;
         })
         .catch((error) => {
-          this.$swal("error!", "There was an error " + error, "error");
+          this.$swal("Error!", "There was an error: " + error, "error");
         });
     },
+
     viewDetails(item) {
-      this.$router.push({ name: "userdetailspage", params: { user: item.a } });
+      this.$router.push({
+        name: "userdetailspage",
+        params: { user: item.a },
+      });
     },
 
+    goToAddUser() {
+      this.$router.push({ name: "adduserpage" });
+    },
   },
   created() {
     this.loadUsers();
-  }
-
+  },
 };
 </script>
-

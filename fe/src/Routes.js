@@ -29,6 +29,7 @@ import Feedback from '@/pages/General/Feedback';
 import MonthlyCondition from '@/pages/General/MonthlyCondition';
 import Reports from '@/pages/Reports/Reports';
 import Sales from '@/pages/Sales/Sales';
+import Consultations from '@/pages/Patients/Consultations';
 import WalkInPatients from '@/pages/Patients/WalkInPatients';
 import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
 import InsurancePage from '@/pages/Insurance/InsurancePage';
@@ -178,6 +179,11 @@ export default new Router({
           path: 'walkinpatients',
           name: 'walkinpatients',
           component: WalkInPatients,
+        },
+        {
+          path: 'consultations',
+          name: 'consultations',
+          component: Consultations,
         },
         {
           path: 'walk-in-patient-details',

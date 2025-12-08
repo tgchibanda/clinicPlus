@@ -56,7 +56,7 @@
     </b-container>
     <footer class="auth-footer">
       <cookie-law theme="dark-lime"></cookie-law>
-      2021 &copy; clinicPlus App Developed By
+      2025 &copy; clinicPlus App Developed By
       <a
         rel="nofollow noopener noreferrer"
         target="_blank"
@@ -98,7 +98,7 @@ export default {
             window.localStorage.setItem("authenticated", true);
             window.localStorage.setItem("otpStatus", false);
 
-            this.$router.push("/app/dashboard");
+            this.$router.push("/app/reports");
           },
           (error) => {
             this.loading = false;
@@ -117,7 +117,7 @@ export default {
   },
   created() {
     if (window.localStorage.getItem("authenticated") === "true") {
-      this.$router.push("/app/dashboard");
+      this.$router.push("/app/reports");
     }
   },
 };

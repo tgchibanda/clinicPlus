@@ -35,7 +35,7 @@ export default {
         this.$store.dispatch("auth/login", user).then(
           () => {
             window.localStorage.setItem("authenticated", true);
-            this.$router.push("/app/dashboard");
+            this.$router.push("/app/reports");
           },
           (error) => {
             console.log(error);
