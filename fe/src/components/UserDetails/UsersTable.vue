@@ -9,15 +9,20 @@
     />
 
     <Widget
-      title="System Users"
+      
       bodyClass="widget-table-overflow"
       customHeader
       :fetchingData="loading"
     >
       <!-- Add User Button -->
       <div class="mb-3 text-right">
-        <b-button variant="success" @click="goToAddUser">
-          <i class="fa fa-plus"></i> Add User
+        <b-button
+          v-b-modal.modal-new-user
+          variant="primary"
+          class="modal-button"
+        >
+          <i class="fa fa-plus" aria-hidden="true"></i>
+          Add New User
         </b-button>
       </div>
 
@@ -36,7 +41,13 @@
             <tr v-for="row in UserDetails.data" :key="row.a">
               <td>{{ row.name }}</td>
               <td>{{ row.email }}</td>
-              <td>{{ row.role }}</td>
+              <td>{{
+                    row.role === 'user'
+                      ? 'Pharmacist'
+                      : row.role === 'field officer'
+                      ? 'Field Officer'
+                      : 'Doctor'
+                  }}</td>
               <td>
                 <b-badge
                   :variant="
@@ -61,6 +72,17 @@
         </table>
       </div>
     </Widget>
+
+    <b-modal
+      id="modal-new-user"
+      size="lg"
+      ref="modal-new-user"
+      title="New User"
+      hide-footer
+    >
+      <user-details />
+    </b-modal>
+
   </div>
 </template>
 

@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Contact;
 use App\Models\UserRole;
-use App\Models\Upload;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class ContactController extends Controller
 {
@@ -17,52 +18,86 @@ class ContactController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
-    {
-        Log::debug(__METHOD__ . ' bof');
+{
+    Log::debug(__METHOD__ . ' bof');
 
-        $this->validate($request,[
-            'user_id' => 'required|numeric|max:191',
-            'unit_number' => 'required',
-            //'file' => 'required|mimes:jpg,jpeg,png,csv,txt,xlx,xls,pdf|max:2048',
-            // 'fullname' => 'required|max:191',
-            'street_name' => 'required',
-            'city' => 'required|alpha_num',
-            'mobile_no' => 'required|numeric',
+    // ----------------------------
+    // VALIDATION
+    // ----------------------------
+    $this->validate($request, [
+        'fullname'          => 'required|string|max:191',
+        'email'             => 'required|email|unique:users,email',
+        'password'          => 'required|min:6|confirmed',
+        'password_confirmation' => 'required|min:6',
+        'user_account'              => 'required|string',
+        'mobile_no'         => 'required|numeric',
+        'unit_number'       => 'required|string',
+        'street_name'       => 'required|string',
+        'surburb'           => 'nullable|string',
+        'city'              => 'required|string',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // ----------------------------
+        // CREATE USER
+        // ----------------------------
+        $user = User::create([
+            'name'      => $request->fullname,
+            'email'     => $request->email,
+            'password'  => bcrypt($request->password),
+            'location_id' => $request->location,
         ]);
 
-         $fileUpload = new Upload;
-
-         if ($request->file()) {
-             $file_name = time().'_'.$request->file->getClientOriginalName();
-             $file_path = $request->file('file')->storeAs('uploads', $file_name, 'public');
-
-             $fileUpload->user_id = $request['user_id'];
-             $fileUpload->upload_name = time().'_'.$request->file->getClientOriginalName();
-             $fileUpload->description = 'profile';
-             $fileUpload->upload = '/storage/' . $file_path;
-             $fileUpload->save();
-
-         }
-
-        $contact = Contact::updateOrCreate([
-            'user_id' => $request['user_id'],
-            'unit_number' => $request['unit_number'],
-            'street_name' => $request['street_name'],
-            'suburb' => $request['surburb'],
-            'city' => $request['city'],
-            'mobile_no' => $request['mobile_no'],
-            'gps' => 1111,
+        // ----------------------------
+        // CREATE ROLE RECORD
+        // ----------------------------
+        $role = UserRole::create([
+            'user_id'   => $user->id,
+            'role'      => $request->user_account,
+            'status'    => 'active',    // default
         ]);
-            // Email for contact
+
+        // ----------------------------
+        // CREATE CONTACT RECORD
+        // ----------------------------
+        $contact = Contact::create([
+            'user_id'       => $user->id,
+            'unit_number'   => $request->unit_number,
+            'street_name'   => $request->street_name,
+            'suburb'        => $request->surburb,
+            'city'          => $request->city,
+            'mobile_no'     => $request->mobile_no,
+            'gps'           => 123,
+        ]);
+
+        DB::commit();
+
         Log::debug(__METHOD__ . ' eof');
 
         return response()->json([
             "success" => true,
-            "message" => "Data saved successfully.",
-            "data" => $contact
-            ], 201);
+            "message" => "User created successfully.",
+            "data" => [
+                "user" => $user,
+                "role" => $role,
+                "contact" => $contact
+            ]
+        ], 201);
 
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error("ERROR: " . $e->getMessage());
+
+        return response()->json([
+            "success" => false,
+            "message" => "Error creating user.",
+            "error"   => $e->getMessage()
+        ], 500);
     }
+}
+
 
     /**
      * Display the specified resource.
