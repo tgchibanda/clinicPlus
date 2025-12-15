@@ -66,6 +66,7 @@
         <table class="table table-striped table-lg mb-0 requests-table">
           <thead>
             <tr class="text-muted">
+              <th>Officer</th>
               <th>First Name</th>
               <th>Last Name</th>
               <th>Gender</th>
@@ -80,6 +81,7 @@
 
           <tbody>
             <tr v-for="row in pagedPatients" :key="row.id">
+              <td>{{ safeDate(row.user.name) }}</td>
               <td>{{ row.first_name }}</td>
               <td>{{ row.last_name }}</td>
               <td>{{ capFirst(row.gender) }}</td>
@@ -99,25 +101,31 @@
                   {{ capFirst(row.status || '') || '—' }}
                 </span>
               </td>
-              <td>
-                <b-button
-                  v-if="row.status === 'booked'"
-                  variant="primary"
-                  size="sm"
-                  @click="viewDetails(row)"
-                >
-                  <i class="fa fa-book" aria-hidden="true"></i> Prescribe
-                </b-button>
+              <td> 
 
-                <b-button
-                  v-else
-                  v-b-modal.modal-consultation
-                  variant="primary"
-                  size="sm"
-                  @click="sendInfo(row)"
-                >
-                  <span class="fa fa-search-plus" /> Book Consultation
-                </b-button>
+                <div v-if="userRole.role == 'admin' || userRole.role == 'doctor'">
+
+                  <b-button
+                    v-if="row.status === 'booked'"
+                    variant="primary"
+                    size="sm"
+                    @click="viewDetails(row)"
+                  >
+                    <i class="fa fa-book" aria-hidden="true"></i> Prescribe
+                  </b-button>
+
+                
+
+                  <b-button
+                    v-else
+                    v-b-modal.modal-consultation
+                    variant="primary"
+                    size="sm"
+                    @click="sendInfo(row)"
+                  >
+                      <span class="fa fa-search-plus" /> Book Consultation
+                    </b-button>
+                </div>
               </td>
             </tr>
 
@@ -219,11 +227,12 @@
 
 <script>
 import authHeader from "../../services/auth-header";
-
+import userRole from "../../services/user-role";
 export default {
   name: "WalkInPatientsTable",
   data() {
     return {
+      userRole: userRole(),
       errorMessage: null,
       loading: false,
       isLoading: false,
@@ -304,6 +313,7 @@ export default {
             date_of_birth: p.date_of_birth,
             email: p.email,
             phone: p.phone,
+            user: p.user || null,
             doctor: p.doctor || null,
             status: p.status || "pending",
           }));

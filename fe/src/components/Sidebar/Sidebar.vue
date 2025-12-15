@@ -1,135 +1,72 @@
 <template>
   <div class="sidebar-wrapper">
-    <nav
-      :class="{ sidebar: true, sidebarStatic, sidebarOpened }"
-      @mouseenter="sidebarMouseEnter"
-      @mouseleave="sidebarMouseLeave"
-    >
+    <nav :class="{ sidebar: true, sidebarStatic, sidebarOpened }" @mouseenter="sidebarMouseEnter"
+      @mouseleave="sidebarMouseLeave">
       <header class="logo">
-        <router-link to="/app/reports">
-          <span class="primary-word">clinicPlus</span> App
-        </router-link>
+
+        <span class="primary-word">clinicPlus</span> App
+
       </header>
 
-      <!-- USER -->
+      <!-- PHARMACY OFFICER -->
       <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'user'">
-        <NavLink
-          :activeItem="activeItem"
-          header="Dashboard"
-          link="/app/reports"
-          iconName="flaticon-home"
-          index="dashboard"
-          isHeader
-        />
+
+        <NavLink :activeItem="activeItem" header="Prescription Payments" link="/app/prescriptions"
+          iconName="flaticon-database-1" index="prescriptions" isHeader />
+
       </ul>
+      <!-- FIELD OFFICER -->
+      <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'field officer'">
+
+        <NavLink :activeItem="activeItem" header="Patients" link="/app/walkinpatients" iconName="flaticon-user-6"
+          index="walkinpatients" isHeader />
+
+        <NavLink :activeItem="activeItem" header="Insurance" link="/public-signup" iconName="flaticon-compass"
+          index="insurance" isHeader />
+
+      </ul>
+
 
       <!-- DOCTOR -->
       <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'doctor'">
-        <NavLink
-          :activeItem="activeItem"
-          header="Dashboard"
-          link="/app/reports"
-          iconName="flaticon-home"
-          index="dashboard"
-          isHeader
-        />
+
       </ul>
 
       <!-- ADMIN -->
       <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'admin'">
-        
-        <NavLink
-          :activeItem="activeItem"
-          header="Dashboard"
-          link="/app/reports"
-          iconName="flaticon-home"
-          index="dashboard"
-          isHeader
-        />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Consultations"
-          link="/app/consultations"
-            iconName="flaticon-calendar"
-          index="consultations"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Dashboard" link="/app/reports" iconName="flaticon-home"
+          index="dashboard" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Patients"
-          link="/app/walkinpatients"
-            iconName="flaticon-user-6"
-          index="walkinpatients"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Consultations" link="/app/consultations" iconName="flaticon-calendar"
+          index="consultations" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Pharmacy"
-          link="/app/drugs"
-            iconName="flaticon-list"
-          index="drugs"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Patients" link="/app/walkinpatients" iconName="flaticon-user-6"
+          index="walkinpatients" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Prescription Payments"
-          link="/app/prescriptions"
-            iconName="flaticon-database-1"
-          index="prescriptions"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Pharmacy" link="/app/drugs" iconName="flaticon-list" index="drugs"
+          isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Insurance"
-          link="/app/insurance"
-          iconName="flaticon-compass"
-          index="insurance"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Prescription Payments" link="/app/prescriptions"
+          iconName="flaticon-database-1" index="prescriptions" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Users"
-          link="/app/users"
-          iconName="flaticon-user-3"
-          index="users"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Insurance" link="/app/insurance" iconName="flaticon-compass"
+          index="insurance" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Directory"
-          link="/app/AddDirectory"
-          iconName="flaticon-folder"
-          index="AddDirectory"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Users" link="/app/users" iconName="flaticon-user-3" index="users"
+          isHeader />
+
+        <NavLink :activeItem="activeItem" header="Directory" link="/app/AddDirectory" iconName="flaticon-folder"
+          index="AddDirectory" isHeader />
       </ul>
 
       <!-- INACTIVE / PENDING -->
       <ul class="nav" v-if="userRole.status == 'inactive' || userRole.status == 'pending' || userRole.status == null">
-        <NavLink
-          :activeItem="activeItem"
-          header="My Account"
-          link="/app/account"
-          iconName="flaticon-user"
-          index="account"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="My Account" link="/app/account" iconName="flaticon-user"
+          index="account" isHeader />
 
-        <NavLink
-          :activeItem="activeItem"
-          header="Directory"
-          link="/app/directory"
-          iconName="flaticon-compass"
-          index="directory"
-          isHeader
-        />
+        <NavLink :activeItem="activeItem" header="Directory" link="/app/directory" iconName="flaticon-compass"
+          index="directory" isHeader />
       </ul>
 
     </nav>

@@ -13,7 +13,7 @@ class PatientController extends Controller
 {
     public function index()
     {
-        $patients = Patient::with('doctor')->latest()->paginate(15);
+        $patients = Patient::with('doctor','user')->latest()->paginate(15);
         return response()->json([
             "success" => true,
             "message" => "Patient Details retrieved successfully.",

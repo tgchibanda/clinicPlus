@@ -45,8 +45,8 @@
           >
           <!-- <social-login></social-login> -->
         </form>
-        <p class="widget-auth-info">Don't have an account? Sign up now!</p>
-        <router-link class="d-block text-center" to="register"
+        <p class="widget-auth-info">Want to join insurance? Sign up now!</p>
+        <router-link class="d-block text-center" to="public-signup"
           >Create an Account</router-link
         >
         <router-link class="d-block text-center" to="forgot-password"
@@ -98,7 +98,8 @@ export default {
             window.localStorage.setItem("authenticated", true);
             window.localStorage.setItem("otpStatus", false);
 
-            this.$router.push("/app/reports");
+            //this.$router.push("/app/reports");
+            this.$router.push("/app");
           },
           (error) => {
             this.loading = false;
