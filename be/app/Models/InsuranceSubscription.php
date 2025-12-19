@@ -21,6 +21,8 @@ class InsuranceSubscription extends Model
         'due_count',
         'next_due_date',
         'notes',
+        'policy_number',
+        'last_notification',
     ];
 
     protected $casts = [
