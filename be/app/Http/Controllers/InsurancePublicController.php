@@ -98,6 +98,7 @@ class InsurancePublicController extends Controller
                 'started_at' => now(),
                 'next_due_date' => now()->addMonth()->startOfDay(),
                 'policy_number' => $policy_number,
+                'last_notification' => '',
             ]);
 
             // Add dependents
