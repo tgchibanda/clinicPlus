@@ -445,14 +445,14 @@
                   <div
                     v-for="doc in consultationDocuments"
                     :key="doc.id"
-                    class="document-item mb-2"
+                    class="document-item"
                   >
-                    <div class="d-flex align-items-center p-2 border rounded">
+                    <div class="d-flex align-items-center">
                       <div class="doc-icon mr-3">
-                        <i :class="getFileIcon(doc.file_type)" style="font-size: 24px;"></i>
+                        <i :class="getFileIcon(doc.file_type)"></i>
                       </div>
                       <div class="flex-grow-1">
-                        <div class="doc-title font-weight-bold">{{ doc.title }}</div>
+                        <div class="doc-title">{{ doc.title }}</div>
                         <small class="text-muted">
                           {{ doc.file_name }} • {{ formatFileSize(doc.file_size) }} • 
                           {{ formatDateTime(doc.created_at) }}
@@ -475,7 +475,7 @@
                           <i class="fa fa-trash"></i>
                         </b-button>
                       </div>
-                    </div>
+                    </div><hr></hr>
                   </div>
                 </div>
               </div>
@@ -751,7 +751,20 @@ export default {
             (error && error.message) || error + '';
         });
     },
-
+ // Document Methods
+    loadConsultationDocuments(consultationId) {
+      this.loadingDocuments = true;
+      this.$axios
+        .get(this.$base_url + "consultations/" + consultationId + "/documents", authHeader())
+        .then(({ data }) => {
+          this.loadingDocuments = false;
+          this.consultationDocuments = (data && data.data) ? data.data : [];
+        })
+        .catch((error) => {
+          this.loadingDocuments = false;
+          console.error("Error loading documents:", error);
+        });
+    },
     loadDrugOptions() {
       this.$axios
         .get(this.$base_url + "drugs", authHeader())
@@ -1354,3 +1367,5 @@ export default {
   vertical-align: middle;
 }
 </style>
+
+    

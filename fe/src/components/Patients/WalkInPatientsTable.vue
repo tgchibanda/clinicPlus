@@ -92,15 +92,7 @@
                   >
                     <i class="fa fa-user-circle"></i> View Profile
                   </b-button>
-                  <b-button 
-                    size="sm" 
-                    variant="primary" 
-                    class="mb-1"
-                    @click="viewDetails(row)"
-                    title="Manage consultation and prescription"
-                  >
-                    <i class="fa fa-book"></i> Manage
-                  </b-button>
+                  
                 </div>
               </td>
             </tr>

@@ -48,8 +48,8 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::apiResources(['monthly_condition' => 'MonthlyConditionController']);
     Route::apiResources(['doctor_details' => 'DoctorDetailController']);
     Route::apiResources(['user_details' => 'UserDetailsController']);
-    Route::post('accept_user', [UserDetailsController::class, 'acceptUser']);
-    Route::post('suspend_user', [UserDetailsController::class, 'suspendUser']);
+    Route::post('accept_user', [\App\Http\Controllers\UserDetailsController::class, 'acceptUser']);
+    Route::post('suspend_user', [\App\Http\Controllers\UserDetailsController::class, 'suspendUser']);
     Route::apiResources(['directory' => 'DirectoryController']);
     Route::apiResources(['payouts' => 'PayoutController']);
 
