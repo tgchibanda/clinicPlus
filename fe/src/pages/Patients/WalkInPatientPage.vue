@@ -1,18 +1,52 @@
 <template>
   <section>
-    <<b-modal
-  id="modal-doctor-notes"
-  ref="modal-doctor-notes"
-  size="lg"
-  title="Doctor's notes"
-  hide-footer
->
-  <doctors-notes
-    :consultation="currentConsultation"
-    :patient-details="patientDetails"
-    @saved="closeModalDoctorNotes"
-  />
-</b-modal>
+    <b-modal
+      id="modal-doctor-notes"
+      ref="modal-doctor-notes"
+      size="lg"
+      title="Doctor's notes"
+      hide-footer
+    >
+      <doctors-notes
+        :consultation="currentConsultation"
+        :patient-details="patientDetails"
+        @saved="closeModalDoctorNotes"
+      />
+    </b-modal>
+
+    <!-- Upload Document Modal -->
+    <b-modal
+      id="modal-upload-document"
+      ref="modal-upload-document"
+      title="Upload Document"
+      @ok="handleUploadDocument"
+      @hidden="resetUploadForm"
+    >
+      <b-form @submit.prevent="handleUploadDocument">
+        <b-form-group label="Document Title *" label-for="doc-title">
+          <b-form-input
+            id="doc-title"
+            v-model="uploadForm.title"
+            placeholder="Enter document title"
+            required
+          />
+        </b-form-group>
+
+        <b-form-group label="Select File *" label-for="doc-file">
+          <b-form-file
+            id="doc-file"
+            v-model="uploadForm.file"
+            accept=".pdf,.jpeg,.jpg,.png,.txt,.doc,.docx"
+            placeholder="Choose a file or drop it here..."
+            drop-placeholder="Drop file here..."
+            required
+          />
+          <small class="text-muted">
+            Allowed: PDF, JPEG, JPG, PNG, TXT, DOC, DOCX (Max: 10MB)
+          </small>
+        </b-form-group>
+      </b-form>
+    </b-modal>
 
     <h1 class="page-title">
       Patient — <span class="fw-semi-bold">Details</span>
@@ -95,160 +129,222 @@
           </div>
         </div>
 
-        <!-- Consultation History (one record per page) -->
-        <!-- Consultation History (redesigned) -->
-<div class="card shadow-sm border-0 mb-4 consult-history">
-  <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
-    <div class="d-flex align-items-center">
-      <span class="ch-icon mr-2"><i class="fa fa-history"></i></span>
-      <div>
-        <h5 class="mb-0 font-weight-bold">Consultation History</h5>
-        <small class="text-muted d-block">
-          {{ consultations.length ? ('Showing ' + chPage + ' of ' + chTotalPages) : 'No consultations' }}
-        </small>
-      </div>
-    </div>
-
-    <div class="ch-pager d-none d-md-flex">
-      <b-button
-        size="sm"
-        variant="outline-secondary"
-        :disabled="chPage <= 1"
-        @click="chPrev"
-        class="mr-2"
-      >
-        <i class="fa fa-chevron-left mr-1"></i> Prev
-      </b-button>
-      <b-button
-        size="sm"
-        variant="outline-secondary"
-        :disabled="chPage >= chTotalPages"
-        @click="chNext"
-      >
-        Next <i class="fa fa-chevron-right ml-1"></i>
-      </b-button>
-    </div>
-  </div>
-
-  <div class="card-body pt-0">
-    <b-alert v-if="chError" show variant="danger" class="alert-sm mb-3">
-      {{ chError }}
-    </b-alert>
-
-    <div v-if="currentConsultation" class="ch-sheet">
-      <!-- Top meta row -->
-      <div class="d-flex flex-wrap align-items-center mb-3">
-        <div class="d-flex align-items-center mr-3">
-          <div class="ch-datepill mr-2">
-            <i class="fa fa-calendar"></i>
-          </div>
-          <div>
-            <div class="font-weight-bold">
-              {{ formatDate(currentConsultation.start_at) }}
+        <!-- Consultation History -->
+        <div class="card shadow-sm border-0 mb-4 consult-history">
+          <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+              <span class="ch-icon mr-2"><i class="fa fa-history"></i></span>
+              <div>
+                <h5 class="mb-0 font-weight-bold">Consultation History</h5>
+                <small class="text-muted d-block">
+                  {{ consultations.length ? ('Showing ' + chPage + ' of ' + chTotalPages) : 'No consultations' }}
+                </small>
+              </div>
             </div>
-            <small class="text-muted">
-              {{ timeOnly(currentConsultation.start_at) }} – {{ timeOnly(currentConsultation.end_at) }}
-            </small>
+
+            <div class="ch-pager d-none d-md-flex">
+              <b-button
+                size="sm"
+                variant="outline-secondary"
+                :disabled="chPage <= 1"
+                @click="chPrev"
+                class="mr-2"
+              >
+                <i class="fa fa-chevron-left mr-1"></i> Prev
+              </b-button>
+              <b-button
+                size="sm"
+                variant="outline-secondary"
+                :disabled="chPage >= chTotalPages"
+                @click="chNext"
+              >
+                Next <i class="fa fa-chevron-right ml-1"></i>
+              </b-button>
+            </div>
           </div>
-        </div>
 
-        <span
-          class="badge ml-auto ch-status"
-          :class="consultationStatusClass(currentConsultation.status)"
-        >
-          {{ capFirst(statusLabel(currentConsultation.status)) }}
-        </span>
-      </div>
+          <div class="card-body pt-0">
+            <b-alert v-if="chError" show variant="danger" class="alert-sm mb-3">
+              {{ chError }}
+            </b-alert>
 
-      <div class="ch-divider"></div>
+            <div v-if="currentConsultation" class="ch-sheet">
+              <!-- Top meta row -->
+              <div class="d-flex flex-wrap align-items-center mb-3">
+                <div class="d-flex align-items-center mr-3">
+                  <div class="ch-datepill mr-2">
+                    <i class="fa fa-calendar"></i>
+                  </div>
+                  <div>
+                    <div class="font-weight-bold">
+                      {{ formatDate(currentConsultation.start_at) }}
+                    </div>
+                    <small class="text-muted">
+                      {{ timeOnly(currentConsultation.start_at) }} – {{ timeOnly(currentConsultation.end_at) }}
+                    </small>
+                  </div>
+                </div>
 
-      <!-- Quick facts -->
-      <div class="row ch-facts">
-        <div class="col-md-4 mb-3">
-          <div class="ch-label">Doctor</div>
-          <div class="ch-value">
-            {{ (currentConsultation.doctor && currentConsultation.doctor.name) || '—' }}
-            <span
-              v-if="currentConsultation.doctor && currentConsultation.doctor.is_super_doctor"
-              class="badge badge-light border ml-2"
-            >Super</span>
-          </div>
-        </div>
+                <span
+                  class="badge ml-auto ch-status"
+                  :class="consultationStatusClass(currentConsultation.status)"
+                >
+                  {{ capFirst(statusLabel(currentConsultation.status)) }}
+                </span>
+              </div>
 
-        <div class="col-md-4 mb-3">
-          <div class="ch-label">Location</div>
-          <div class="ch-value">
-            {{ (currentConsultation.location && currentConsultation.location.name) || '—' }}
-          </div>
-        </div>
+              <div class="ch-divider"></div>
 
-        <div class="col-md-4 mb-3">
-          <div class="ch-label">Booked By</div>
-          <div class="ch-value">
-            {{ (currentConsultation.creator && currentConsultation.creator.name) || '—' }}
-          </div>
-        </div>
-      </div>
+              <!-- Quick facts -->
+              <div class="row ch-facts">
+                <div class="col-md-4 mb-3">
+                  <div class="ch-label">Doctor</div>
+                  <div class="ch-value">
+                    {{ (currentConsultation.doctor && currentConsultation.doctor.name) || '—' }}
+                    <span
+                      v-if="currentConsultation.doctor && currentConsultation.doctor.is_super_doctor"
+                      class="badge badge-light border ml-2"
+                    >Super</span>
+                  </div>
+                </div>
 
-      <div class="ch-divider"></div>
+                <div class="col-md-4 mb-3">
+                  <div class="ch-label">Location</div>
+                  <div class="ch-value">
+                    {{ (currentConsultation.location && currentConsultation.location.name) || '—' }}
+                  </div>
+                </div>
 
-      <!-- Details grid -->
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Reason</div>
-          <div class="ch-block prewrap">{{ currentConsultation.reason || '—' }}</div>
-        </div>
+                <div class="col-md-4 mb-3">
+                  <div class="ch-label">Booked By</div>
+                  <div class="ch-value">
+                    {{ (currentConsultation.creator && currentConsultation.creator.name) || '—' }}
+                  </div>
+                </div>
+              </div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Instruction</div>
-          <div class="ch-block prewrap">{{ currentConsultation.instruction || '—' }}</div>
-        </div>
+              <div class="ch-divider"></div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Past Medical History</div>
-          <div class="ch-block prewrap">{{
-            ((currentConsultation.medical_history && currentConsultation.medical_history.history)
-              || (currentConsultation.medical_histories && currentConsultation.medical_histories[0] && currentConsultation.medical_histories[0].history)
-              || '—').toString().trimStart()
-          }}</div>
-        </div>
+              <!-- Details grid -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Reason</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.reason || '—' }}</div>
+                </div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Examination</div>
-          <div class="ch-block prewrap">{{ currentConsultation.examination || '—' }}</div>
-        </div>
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Instruction</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.instruction || '—' }}</div>
+                </div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Diagnosis</div>
-          <div class="ch-block prewrap">{{ currentConsultation.diagnosis || '—' }}</div>
-        </div>
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Past Medical History</div>
+                  <div class="ch-block prewrap">{{
+                    ((currentConsultation.medical_history && currentConsultation.medical_history.history)
+                      || (currentConsultation.medical_histories && currentConsultation.medical_histories[0] && currentConsultation.medical_histories[0].history)
+                      || '—').toString().trimStart()
+                  }}</div>
+                </div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Management</div>
-          <div class="ch-block prewrap">{{ currentConsultation.management || '—' }}</div>
-        </div>
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Examination</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.examination || '—' }}</div>
+                </div>
 
-        <div class="col-md-6 mb-3">
-          <div class="ch-label">Investigation</div>
-          <div class="ch-block prewrap">{{ currentConsultation.investigation || '—' }}</div>
-        </div>
-      </div>
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Diagnosis</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.diagnosis || '—' }}</div>
+                </div>
 
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <div v-if="!currentConsultation || !currentConsultation.diagnosis">
-            <b-button variant="primary" v-b-modal.modal-doctor-notes>
-              <span class="fa fa-file-word-o" /> Add Doctor's notes
-            </b-button>
-          </div>
-        </div>
-      </div>
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Management</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.management || '—' }}</div>
+                </div>
 
-                 
+                <div class="col-md-6 mb-3">
+                  <div class="ch-label">Investigation</div>
+                  <div class="ch-block prewrap">{{ currentConsultation.investigation || '—' }}</div>
+                </div>
+              </div>
 
+              <!-- Attachments Section -->
+              <div class="ch-divider"></div>
+              <div class="attachments-section">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div class="ch-label mb-0">
+                    <i class="fa fa-paperclip mr-1"></i>
+                    Attachments ({{ consultationDocuments.length }})
+                  </div>
+                  <b-button
+                    size="sm"
+                    variant="primary"
+                    @click="showUploadModal"
+                  >
+                    <i class="fa fa-upload mr-1"></i> Upload Document
+                  </b-button>
+                </div>
 
-      <!-- Footer actions -->
-      <div class="d-flex align-items-center justify-content-between mt-2">
+                <div v-if="loadingDocuments" class="text-center py-3">
+                  <b-spinner small></b-spinner>
+                  <span class="ml-2">Loading documents...</span>
+                </div>
+
+                <div v-else-if="consultationDocuments.length === 0" class="text-center text-muted py-3">
+                  <i class="fa fa-inbox" style="font-size: 24px;"></i>
+                  <p class="mb-0 mt-2">No documents uploaded yet</p>
+                </div>
+
+                <div v-else class="documents-list">
+                  <div
+                    v-for="doc in consultationDocuments"
+                    :key="doc.id"
+                    class="document-item"
+                  >
+                    <div class="d-flex align-items-center">
+                      <div class="doc-icon mr-3">
+                        <i :class="getFileIcon(doc.file_type)"></i>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="doc-title">{{ doc.title }}</div>
+                        <small class="text-muted">
+                          {{ doc.file_name }} • {{ formatFileSize(doc.file_size) }} • 
+                          {{ formatDateTime(doc.created_at) }}
+                        </small>
+                      </div>
+                      <div class="doc-actions">
+                        <b-button
+                          size="sm"
+                          variant="outline-primary"
+                          class="mr-2"
+                          @click="downloadDocument(doc.id, doc.file_name)"
+                        >
+                          <i class="fa fa-download"></i>
+                        </b-button>
+                        <b-button
+                          size="sm"
+                          variant="outline-danger"
+                          @click="confirmDeleteDocument(doc.id)"
+                        >
+                          <i class="fa fa-trash"></i>
+                        </b-button>
+                      </div>
+                    </div><hr></hr>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="col-md-6 mb-3">
+                  <div v-if="!currentConsultation || !currentConsultation.diagnosis">
+                    <b-button variant="primary" v-b-modal.modal-doctor-notes>
+                      <span class="fa fa-file-word-o" /> Add Doctor's notes
+                    </b-button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer actions -->
+              <div class="d-flex align-items-center justify-content-between mt-2">
                 <small class="text-muted">
                   Created: {{ formatDateTime(currentConsultation.created_at) }}
                 </small>
@@ -277,26 +373,25 @@
               </div>
             </div>
 
-    <div v-else class="text-center text-muted py-5">
-      <i class="fa fa-info-circle mb-2 d-block" style="font-size:20px;"></i>
-      No consultations to show.
-    </div>
-  </div>
+            <div v-else class="text-center text-muted py-5">
+              <i class="fa fa-info-circle mb-2 d-block" style="font-size:20px;"></i>
+              No consultations to show.
+            </div>
+          </div>
 
-  <!-- Compact pager for mobile -->
-  <div class="card-footer bg-white border-0 pt-0 d-flex d-md-none align-items-center justify-content-between">
-    <b-button size="sm" variant="outline-secondary" :disabled="chPage <= 1" @click="chPrev">
-      ← Previous
-    </b-button>
-    <small class="text-muted">
-      {{ consultations.length ? ('Page ' + chPage + ' of ' + chTotalPages) : '' }}
-    </small>
-    <b-button size="sm" variant="outline-secondary" :disabled="chPage >= chTotalPages" @click="chNext">
-      Next →
-    </b-button>
-  </div>
-</div>
-
+          <!-- Compact pager for mobile -->
+          <div class="card-footer bg-white border-0 pt-0 d-flex d-md-none align-items-center justify-content-between">
+            <b-button size="sm" variant="outline-secondary" :disabled="chPage <= 1" @click="chPrev">
+              ← Previous
+            </b-button>
+            <small class="text-muted">
+              {{ consultations.length ? ('Page ' + chPage + ' of ' + chTotalPages) : '' }}
+            </small>
+            <b-button size="sm" variant="outline-secondary" :disabled="chPage >= chTotalPages" @click="chNext">
+              Next →
+            </b-button>
+          </div>
+        </div>
 
         <!-- Prescription Card -->
         <div class="card rounded-3 shadow-sm">
@@ -327,7 +422,6 @@
                   class="drug-item mb-3"
                 >
                   <div class="row align-items-start">
-                    <!-- Drug select wider -->
                     <div class="col-md-7">
                       <label class="form-label small text-muted d-block mb-1">Drug</label>
                       <b-form-select
@@ -343,7 +437,6 @@
                         </template>
                       </b-form-select>
 
-                      <!-- Inline stock & price -->
                       <div v-if="selectedDrug(idx)" class="mt-2 d-flex flex-wrap gap-2">
                         <span class="badge badge-soft">
                           Stock: {{ selectedDrug(idx).stock_quantity }}
@@ -378,7 +471,6 @@
                     </div>
                   </div>
 
-                  <!-- Dosage instructions -->
                   <div class="row mt-2">
                     <div class="col-12">
                       <label class="form-label small text-muted d-block mb-1">Dosage instructions</label>
@@ -422,25 +514,28 @@ export default {
   name: "WalkInPatientPage",
   data() {
     return {
-      // patient summary
       loadingPersonalDetails: false,
       submitting: false,
       user_id: JSON.parse(localStorage.getItem("user")).user_id,
       user_role: userRole(),
       patientDetails: {},
-
-      // prescription
       drugOptions: [],
       prescription: {
         notes: "",
         drugs: [{ drug_id: "", quantity: 1, dosage_instructions: "" }],
       },
-
-      // consultation history
-      consultations: [], // full list (we paginate one-per-page)
-      chPage: 1,         // current page (1-based)
+      consultations: [],
+      chPage: 1,
       chError: null,
       activeConsultation: null,
+      
+      // Documents
+      consultationDocuments: [],
+      loadingDocuments: false,
+      uploadForm: {
+        title: "",
+        file: null,
+      },
     };
   },
   computed: {
@@ -457,23 +552,21 @@ export default {
       return "badge-secondary";
     },
     drugSelectOptions() {
-  return this.drugOptions.map(d => {
-    const formattedDate = d.expiry_date
-      ? new Date(d.expiry_date).toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        })
-      : "—";
+      return this.drugOptions.map(d => {
+        const formattedDate = d.expiry_date
+          ? new Date(d.expiry_date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric"
+            })
+          : "—";
 
-    return {
-      value: d.id,
-      text: `${d.name} - Batch ${d.batch_number || "N/A"} - Expiring ${formattedDate}`
-    };
-  });
-}
-,
-    // one record per page
+        return {
+          value: d.id,
+          text: `${d.name} - Batch ${d.batch_number || "N/A"} - Expiring ${formattedDate}`
+        };
+      });
+    },
     chTotalPages() {
       return Math.max(1, this.consultations.length);
     },
@@ -484,30 +577,35 @@ export default {
       return this.consultations[idx];
     },
   },
+  watch: {
+    currentConsultation(newVal) {
+      if (newVal && newVal.id) {
+        this.loadConsultationDocuments(newVal.id);
+      }
+    },
+  },
   methods: {
-    /* =======================
-       Data Loads
-       ======================= */
     closeModalDoctorNotes() {
-  // close modal
-  this.$refs["modal-doctor-notes"]?.hide();
-  // reload the current patient's consultations
-  this.loadConsultations(this.$route.params.patient);
-  this.$swal("Success!", "Doctor's notes saved", "success");
-},
-getPrescriptionId(c) {
+      this.$refs["modal-doctor-notes"]?.hide();
+      this.loadConsultations(this.$route.params.patient);
+      this.$swal("Success!", "Doctor's notes saved", "success");
+    },
+    
+    getPrescriptionId(c) {
       if (!c) return null;
       if (c.prescription_id) return c.prescription_id;
       if (c.prescription && c.prescription.id) return c.prescription.id;
       if (c.prescriptions && c.prescriptions.length && c.prescriptions[0].id) return c.prescriptions[0].id;
       return null;
     },
-goToPrescription(c) {
+    
+    goToPrescription(c) {
       const pid = this.getPrescriptionId(c);
       if (!pid) return;
       this.$router.push({ name: "prescriptionpage", params: { prescription: pid } });
     },
-loadPatient(id) {
+    
+    loadPatient(id) {
       this.loadingPersonalDetails = true;
       this.$axios
         .get(this.$base_url + "walk_in_patient_details/" + id + "/walk-in-patient-details", authHeader())
@@ -520,6 +618,7 @@ loadPatient(id) {
           this.$swal("error!", "There was an error " + error, "error");
         });
     },
+    
     loadDrugOptions() {
       this.$axios
         .get(this.$base_url + "drugs", authHeader())
@@ -540,8 +639,8 @@ loadPatient(id) {
           this.$swal("error!", "Could not load drugs: " + error, "error");
         });
     },
+    
     loadConsultations(patientId) {
-      // Your chosen endpoint:
       var url = this.$base_url + "walk-in-patient/" + patientId + "/consultation_history";
       this.$axios
         .get(url, authHeader())
@@ -550,55 +649,184 @@ loadPatient(id) {
           this.consultations = list;
           this.chPage = 1;
           this.chError = null;
-          this.activeConsultation = this.currentConsultation.id;
+          if (this.currentConsultation) {
+            this.activeConsultation = this.currentConsultation.id;
+          }
         })
         .catch((error) => {
           this.chError =
             (error && error.response && error.response.data && error.response.data.message) ||
             (error && error.message) || error + '';
         });
-
-        
     },
 
-    /* =======================
-       Consultation History UI
-       ======================= */
-    chPrev() { if (this.chPage > 1) this.chPage -= 1; },
-    chNext() { if (this.chPage < this.chTotalPages) this.chPage += 1; },
+    // Document Methods
+    loadConsultationDocuments(consultationId) {
+      this.loadingDocuments = true;
+      this.$axios
+        .get(this.$base_url + "consultations/" + consultationId + "/documents", authHeader())
+        .then(({ data }) => {
+          this.loadingDocuments = false;
+          this.consultationDocuments = (data && data.data) ? data.data : [];
+        })
+        .catch((error) => {
+          this.loadingDocuments = false;
+          console.error("Error loading documents:", error);
+        });
+    },
+
+    showUploadModal() {
+      if (!this.currentConsultation || !this.currentConsultation.id) {
+        this.$swal("Error", "No consultation selected", "error");
+        return;
+      }
+      this.$bvModal.show("modal-upload-document");
+    },
+
+    resetUploadForm() {
+      this.uploadForm = {
+        title: "",
+        file: null,
+      };
+    },
+
+    handleUploadDocument(bvModalEvt) {
+      bvModalEvt.preventDefault();
+      
+      if (!this.uploadForm.title || !this.uploadForm.file) {
+        this.$swal("Validation", "Please provide both title and file", "warning");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("consultation_id", this.currentConsultation.id);
+      formData.append("uploaded_by", this.currentConsultation.doctor.id);
+      formData.append("title", this.uploadForm.title);
+      formData.append("document", this.uploadForm.file);
+
+      this.$axios
+        .post(this.$base_url + "consultation-documents/upload", formData, {
+          headers: {
+            ...authHeader().headers,
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then(({ data }) => {
+          this.$swal("Success", "Document uploaded successfully", "success");
+          this.$bvModal.hide("modal-upload-document");
+          this.resetUploadForm();
+          this.loadConsultationDocuments(this.currentConsultation.id);
+        })
+        .catch((error) => {
+          const msg =
+            (error && error.response && error.response.data && error.response.data.message) ||
+            (error && error.message) || error + '';
+          this.$swal("Error", msg, "error");
+        });
+    },
+
+    downloadDocument(docId, fileName) {
+      this.$axios
+        .get(this.$base_url + "consultation-documents/" + docId + "/download", {
+          ...authHeader(),
+          responseType: "blob",
+        })
+        .then((response) => {
+          const url = window.URL.createObjectURL(new Blob([response.data]));
+          const link = document.createElement("a");
+          link.href = url;
+          link.setAttribute("download", fileName);
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch((error) => {
+          const msg =
+            (error && error.response && error.response.data && error.response.data.message) ||
+            (error && error.message) || error + '';
+          this.$swal("Error", "Failed to download: " + msg, "error");
+        });
+    },
+
+    confirmDeleteDocument(docId) {
+      this.$swal({
+        title: "Are you sure?",
+        text: "This document will be permanently deleted!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.deleteDocument(docId);
+        }
+      });
+    },
+
+    deleteDocument(docId) {
+      this.$axios
+        .delete(this.$base_url + "consultation-documents/" + docId, authHeader())
+        .then(({ data }) => {
+          this.$swal("Deleted!", "Document has been deleted.", "success");
+          this.loadConsultationDocuments(this.currentConsultation.id);
+        })
+        .catch((error) => {
+          const msg =
+            (error && error.response && error.response.data && error.response.data.message) ||
+            (error && error.message) || error + '';
+          this.$swal("Error", "Failed to delete: " + msg, "error");
+        });
+    },
+
+    getFileIcon(fileType) {
+      const type = (fileType || "").toLowerCase();
+      if (type === "pdf") return "fa fa-file-pdf text-danger";
+      if (type === "doc" || type === "docx") return "fa fa-file-word text-primary";
+      if (type === "txt") return "fa fa-file-alt text-secondary";
+      if (type === "jpg" || type === "jpeg" || type === "png") return "fa fa-file-image text-success";
+      return "fa fa-file text-muted";
+    },
+
+    formatFileSize(bytes) {
+      if (!bytes) return "0 B";
+      const k = 1024;
+      const sizes = ["B", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+    },
+
+    chPrev() { 
+      if (this.chPage > 1) this.chPage -= 1; 
+    },
+    
+    chNext() { 
+      if (this.chPage < this.chTotalPages) this.chPage += 1; 
+    },
+    
     consultationStatusClass(status) {
       var s = (status || 0);
       if (s === 4 || s === 'completed' || s === 'done') return "badge-success";
       if (s === 0 || s === 'pending' || s === 'booked') return "badge-warning";
       return "badge-secondary";
     },
+    
     statusLabel(status) {
-  if (parseInt(status) === 4) {
-    return "Notes Added";
-  }
-  return "No Notes";
-},
+      if (parseInt(status) === 4) {
+        return "Notes Added";
+      }
+      return "No Notes";
+    },
 
     hasPrescription(c) {
-      
       if (!c) return false;
       if (c.prescription_id) return true;
       if (c.prescription && c.prescription.id) return true;
       if (c.prescriptions && c.prescriptions.length && c.prescriptions[0].id) return true;
       return false;
     },
-    getPrescriptionId(c) {
-      if (!c) return null;
-      if (c.prescription_id) return c.prescription_id;
-      if (c.prescription && c.prescription.id) return c.prescription.id;
-      if (c.prescriptions && c.prescriptions.length && c.prescriptions[0].id) return c.prescriptions[0].id;
-      return null;
-      },
-    goToPrescription(c) {
-      const pid = this.getPrescriptionId(c);
-      if (!pid) return;
-      this.$router.push({ name: "prescriptionpage", params: { prescription: pid } });
-    },
+    
     reloadOne(c) {
       this.loadConsultations(this.$route.params.patient);
     },
@@ -611,14 +839,17 @@ loadPatient(id) {
       }
       return null;
     },
+    
     formatMoney(v) {
       var n = Number(v || 0);
       return isNaN(n) ? "$0.00" : "$" + n.toFixed(2);
     },
+    
     capFirst(v) {
       if (!v) return "";
       return v.charAt(0).toUpperCase() + v.slice(1);
     },
+    
     formatDate(val) {
       if (!val) return "—";
       var d = new Date(val);
@@ -626,6 +857,7 @@ loadPatient(id) {
         ? val
         : d.toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" });
     },
+    
     formatDateTime(val) {
       if (!val) return "—";
       var d = new Date(val);
@@ -633,6 +865,7 @@ loadPatient(id) {
         ? val
         : d.toLocaleString("en-AU", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
     },
+    
     timeOnly(val) {
       if (!val) return "—";
       var d = new Date(val);
@@ -645,9 +878,11 @@ loadPatient(id) {
     addDrug() {
       this.prescription.drugs.push({ drug_id: "", quantity: 1, dosage_instructions: "" });
     },
+    
     removeDrug(index) {
       this.prescription.drugs.splice(index, 1);
     },
+    
     submitPrescription() {
       if (!(this.patientDetails && this.patientDetails.id)) {
         this.$swal("Error", "Patient not loaded yet.", "error");
@@ -705,7 +940,6 @@ loadPatient(id) {
   },
 };
 </script>
-
 <style scoped>
 .consult-history .ch-icon {
   width: 36px;

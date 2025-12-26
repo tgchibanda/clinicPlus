@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Drug;
+use App\Models\DrugRestocking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DrugController extends Controller
 {
@@ -15,9 +17,9 @@ class DrugController extends Controller
             "success" => true,
             "message" => "Drugs Details retrieved successfully.",
             "data" => [
-            "drugs" => $drugs,
-            "low_stock_count" => $lowStockDrugs
-        ]
+                "drugs" => $drugs,
+                "low_stock_count" => $lowStockDrugs
+            ]
         ], 200);
     }
 
@@ -69,8 +71,10 @@ class DrugController extends Controller
         return view('drugs.edit', compact('drug'));
     }
 
-    public function update(Request $request, Drug $drug)
+    public function update(Request $request, $id)
     {
+        $drug = Drug::findOrFail($id);
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'batch_number' => 'required|string|max:255',
@@ -85,23 +89,85 @@ class DrugController extends Controller
 
         $drug->update($validated);
 
-        return redirect()->route('drugs.index')
-            ->with('success', 'Drug updated successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Drug updated successfully!',
+            'data' => $drug
+        ]);
     }
 
-    public function updateStock(Request $request, Drug $drug)
+    public function addStock(Request $request, $id)
     {
-        $request->validate([
-            'quantity' => 'required|integer',
-            'type' => 'required|in:add,subtract'
+        $drug = Drug::findOrFail($id);
+        
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'notes' => 'nullable|string'
         ]);
 
-        if ($request->type === 'add') {
-            $drug->increment('stock_quantity', $request->quantity);
-        } else {
-            $drug->decrement('stock_quantity', $request->quantity);
-        }
+        $previousQuantity = $drug->stock_quantity;
+        $newQuantity = $previousQuantity + $validated['quantity'];
 
-        return back()->with('success', 'Stock updated successfully!');
+        // Update drug stock
+        $drug->update(['stock_quantity' => $newQuantity]);
+
+        // Create audit record
+        DrugRestocking::create([
+            'drug_id' => $drug->id,
+            'user_id' => Auth::id() ?? $request->user_id,
+            'quantity_added' => $validated['quantity'],
+            'previous_quantity' => $previousQuantity,
+            'new_quantity' => $newQuantity,
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Stock added successfully!',
+            'data' => $drug->fresh()
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $drug = Drug::findOrFail($id);
+        
+        // Check if drug exists in prescription_items
+        $prescriptionCount = \DB::table('prescription_items')
+            ->where('drug_id', $id)
+            ->count();
+        
+        if ($prescriptionCount > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This drug cannot be deleted as it has been prescribed to patients. Found in ' . $prescriptionCount . ' prescription(s).',
+            ], 422);
+        }
+        
+        // Safe to delete
+        $drug->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Drug deleted successfully.',
+        ]);
+    }
+
+    public function restockingHistory($id)
+    {
+        $drug = Drug::findOrFail($id);
+        $history = DrugRestocking::where('drug_id', $id)
+            ->with('user')
+            ->latest()
+            ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Restocking history retrieved successfully.',
+            'data' => [
+                'drug' => $drug,
+                'history' => $history
+            ]
+        ]);
     }
 }

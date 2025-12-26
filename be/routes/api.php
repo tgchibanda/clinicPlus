@@ -9,6 +9,8 @@ use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\InsurancePublicController;
 use App\Http\Controllers\ConsultationController;
 use App\Http\Controllers\InsuranceSubscriptionController;
+use App\Http\Controllers\ConsultationDocumentController;
+use App\Http\Controllers\DrugController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,11 +27,12 @@ Route::get('oauth/{driver}/callback', 'Auth\LoginController@handleProviderCallba
 Route::post('password/email', 'Auth\ForgotPasswordController@forgot')->name('password.reset');
 Route::post('password/reset', 'Auth\ForgotPasswordController@reset');
 
-
 Route::post('/public-signup', [InsurancePublicController::class, 'publicSignup']);
 Route::get('/plans', [InsurancePublicController::class, 'getPlans']);
 Route::post('/verify-patient', [InsurancePublicController::class, 'verifyPatient']);
 
+// Document download - NO CORS MIDDLEWARE HERE
+Route::middleware('auth:api')->get('consultation-documents/{id}/download', [ConsultationDocumentController::class, 'download']);
 
 Route::middleware('auth:api')->middleware('cors')->group(function () {
 
@@ -45,6 +48,8 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::apiResources(['monthly_condition' => 'MonthlyConditionController']);
     Route::apiResources(['doctor_details' => 'DoctorDetailController']);
     Route::apiResources(['user_details' => 'UserDetailsController']);
+    Route::post('accept_user', [UserDetailsController::class, 'acceptUser']);
+    Route::post('suspend_user', [UserDetailsController::class, 'suspendUser']);
     Route::apiResources(['directory' => 'DirectoryController']);
     Route::apiResources(['payouts' => 'PayoutController']);
 
@@ -68,7 +73,6 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::get('/reports/export', [InsuranceReportController::class, 'export']);
 
     // Consultations
-    
     Route::apiResources(['consultation' => 'ConsultationController']);
     Route::get('/consultations-report', [ConsultationController::class, 'consultationsReport']);
     Route::get('walk-in-patient/{patient}/consultation_history', [ConsultationController::class, 'byPatient']);
@@ -78,6 +82,11 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::post('/doctors_notes', ['uses' => 'ConsultationController@doctorNotes']);
     Route::get('/request_form/{consultation_id}/{form_type}', ['uses' => 'ConsultationController@generateRequestForm']);
 
+    // Consultation Documents Routes
+    Route::post('consultation-documents/upload', [ConsultationDocumentController::class, 'upload']);
+    Route::get('consultations/{consultationId}/documents', [ConsultationDocumentController::class, 'index']);
+    Route::delete('consultation-documents/{id}', [ConsultationDocumentController::class, 'destroy']);
+
     // --- Patients (walk-in) ---
     Route::apiResources(['walk_in_patient_details' => 'PatientController']);
     Route::get('walk_in_patient_details/{id}/walk-in-patient-details', [PatientController::class, 'walkInPatientDetails']);
@@ -85,10 +94,22 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
         ->name('patients.assign-doctor');
 
     // --- Drugs ---
-    Route::apiResources(['drug_details' => 'DrugController']);
+    // Keep backward compatibility with drug_details endpoints
+    Route::get('drug_details', [DrugController::class, 'index']);
+    Route::post('drug_details', [DrugController::class, 'store']);
+    Route::get('drug_details/{id}', [DrugController::class, 'show']);
+    Route::put('drug_details/{id}', [DrugController::class, 'update']);
+    Route::delete('drug_details/{id}', [DrugController::class, 'destroy']);
     Route::get('drug_details/{id}/drug-details', [DrugController::class, 'drugDetails']);
-    Route::resource('drugs', DrugController::class);
-    Route::post('drugs/{drug}/update-stock', [DrugController::class, 'updateStock'])->name('drugs.update-stock');
+
+    // Main drugs routes
+    Route::get('drugs', [DrugController::class, 'index']);
+    Route::post('drugs', [DrugController::class, 'store']);
+    Route::get('drugs/{id}', [DrugController::class, 'drugDetails']);
+    Route::put('drugs/{id}', [DrugController::class, 'update']);
+    Route::delete('drugs/{id}', [DrugController::class, 'destroy']);
+    Route::post('drugs/{id}/add-stock', [DrugController::class, 'addStock']);
+    Route::get('drugs/{id}/restocking-history', [DrugController::class, 'restockingHistory']);
 
     // --- Prescriptions ---
     Route::resource('prescriptions', PrescriptionController::class);
@@ -105,24 +126,9 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::get('reports/stock', [ReportController::class, 'stockReport'])->name('reports.stock');
     Route::get('reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
 
-    // ======================================================
-    // NEW: Location + Doctor availability endpoints (for booking)
-    // ======================================================
-
-    // 1) Locations list
-    // GET /api/locations  -> { data: [ {id, name, ...}, ... ] }
+    // Locations & Doctors
     Route::get('locations', [LocationController::class, 'index'])->name('locations.index');
-
-    // 2) Doctors by location (supports ?location_id=)
-    // GET /api/doctors?location_id=ID -> { data: [ {id, name, location:{}, is_super_doctor}, ... ] }
     Route::get('doctors', [DoctorController::class, 'index'])->name('doctors.index');
-
-    // 3) Doctor availability by date + location
-    // GET /api/doctors/{doctor}/availability?date=YYYY-MM-DD&location_id=ID
-    // -> { data: { booked_slots:[], doctor_is_super:bool, locked_location_id:int|null, work_hours:{start,end} } }
     Route::get('doctors/{doctor}/availability', [DoctorController::class, 'availability'])
         ->name('doctors.availability');
-
-    // (You already have) 4) Create consultation booking
-    // POST /api/consultation  (handled by ConsultationController@store)
 });

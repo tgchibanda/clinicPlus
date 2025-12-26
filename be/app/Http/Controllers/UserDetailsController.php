@@ -51,35 +51,73 @@ class UserDetailsController extends Controller
         Log::debug(__METHOD__ . ' bof');
 
         if (UserRole::where('user_id', $request->id)->exists()) {
-            $consultation = UserRole::where('user_id', $request->id)->first();
-            $consultation->status = 'active';
-            $consultation->save();
+            $userRole = UserRole::where('user_id', $request->id)->first();
+            $userRole->status = 'active';
+            $userRole->save();
 
             Log::debug(__METHOD__ . ' eof');
 
             $sendEmail = new Emails();
             $sendEmail->sendEmail(
                 $sendEmail->getEmail($request->id, 'user'),
-                "Congratulations, Your doctor account has been approved, kindly login to start use",
-                'clinicPlus Doctor Account Reviewed'
+                "You have been activated as a user at NHS Health Clinic. Please use your login details to access the system again.",
+                'clinicPlus Account Reviewed'
             );
             $sendEmail->sendEmail(
                 env('ADMIN_EMAIL', 'admin@clinicPluszimbabwe.com'),
-                "clinicPlus Doctor Account Reviewed ID = {$request->id}",
-                'clinicPlus Doctor Account Reviewed'
+                "clinicPlus User Account Reviewed ID = {$request->id}",
+                'clinicPlus User Account Reviewed'
             );
             
 
             return response()->json([
                 "success" => true,
-                "message" => "acceptUser saved successfully.",
-                "data" => $consultation
+                "message" => "User activation saved successfully.",
+                "data" => $userRole
             ], 200);
         } else {
             Log::debug(__METHOD__ . ' eof');
             return response()->json([
                 "success" => true,
-                "message" => "acceptUser not found.",
+                "message" => "suspended User not found.",
+            ], 404);
+        }
+    }
+
+    public function suspendUser(Request $request)
+    {
+        Log::debug(__METHOD__ . ' bof');
+
+        if (UserRole::where('user_id', $request->id)->exists()) {
+            $userRole = UserRole::where('user_id', $request->id)->first();
+            $userRole->status = 'suspended';
+            $userRole->save();
+
+            Log::debug(__METHOD__ . ' eof');
+
+            $sendEmail = new Emails();
+            $sendEmail->sendEmail(
+                $sendEmail->getEmail($request->id, 'user'),
+                "You have been suspended as a user at NHS Health Clinic. Please contact the administrator.",
+                'clinicPlus Account Reviewed'
+            );
+            $sendEmail->sendEmail(
+                env('ADMIN_EMAIL', 'admin@clinicPluszimbabwe.com'),
+                "clinicPlus User Account Reviewed ID = {$request->id}",
+                'clinicPlus User Account Reviewed'
+            );
+            
+
+            return response()->json([
+                "success" => true,
+                "message" => "User suspended successfully.",
+                "data" => $userRole
+            ], 200);
+        } else {
+            Log::debug(__METHOD__ . ' eof');
+            return response()->json([
+                "success" => true,
+                "message" => "active User not found.",
             ], 404);
         }
     }
