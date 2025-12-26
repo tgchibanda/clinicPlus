@@ -30,6 +30,7 @@ import MonthlyCondition from '@/pages/General/MonthlyCondition';
 import Reports from '@/pages/Reports/Reports';
 import Sales from '@/pages/Sales/Sales';
 import Consultations from '@/pages/Patients/Consultations';
+import PatientProfile from '@/pages/Patients/PatientProfile';
 import WalkInPatients from '@/pages/Patients/WalkInPatients';
 import WalkInPatientDetails from '@/pages/Patients/WalkInPatientDetails';
 import InsurancePage from '@/pages/Insurance/InsurancePage';
@@ -164,6 +165,12 @@ export default new Router({
           path: 'patients',
           name: 'patients',
           component: Patients,
+        },
+        {
+          path: 'patient-profile/:id',
+          name: 'patientprofile',
+          component: PatientProfile,
+          meta: { requiresAuth: true }
         },
         {
           path: 'patient-details/:patient',

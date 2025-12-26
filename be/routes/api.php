@@ -81,6 +81,7 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::post('/accept_consultation', ['uses' => 'ConsultationController@acceptConsultation']);
     Route::post('/doctors_notes', ['uses' => 'ConsultationController@doctorNotes']);
     Route::get('/request_form/{consultation_id}/{form_type}', ['uses' => 'ConsultationController@generateRequestForm']);
+    Route::put('consultations/{id}', [ConsultationController::class, 'update']);
 
     // Consultation Documents Routes
     Route::post('consultation-documents/upload', [ConsultationDocumentController::class, 'upload']);
@@ -112,10 +113,10 @@ Route::middleware('auth:api')->middleware('cors')->group(function () {
     Route::get('drugs/{id}/restocking-history', [DrugController::class, 'restockingHistory']);
 
     // --- Prescriptions ---
-    Route::resource('prescriptions', PrescriptionController::class);
-    Route::get('patients/{patient}/prescriptions/create', [PrescriptionController::class, 'create'])
+    Route::resource('prescriptions', PrescriptionController::class);  // ✅ NO QUOTES, NO NAMESPACE
+    Route::get('patients/{patient}/prescriptions/create', [\App\Http\Controllers\PrescriptionController::class, 'create'])
         ->name('patient.prescriptions.create');
-
+    Route::put('prescriptions/{id}/update', [\App\Http\Controllers\PrescriptionController::class, 'update']);
     // --- Sales ---
     Route::resource('sales', SaleController::class);
     Route::get('prescriptions/{prescription}/sales/create', [SaleController::class, 'create'])
