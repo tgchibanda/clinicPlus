@@ -29,7 +29,11 @@
 
       <!-- DOCTOR -->
       <ul class="nav" v-if="userRole.status == 'active' && userRole.role == 'doctor'">
+        <NavLink :activeItem="activeItem" header="Consultations" link="/app/consultations" iconName="flaticon-calendar"
+                  index="consultations" isHeader />
 
+        <NavLink :activeItem="activeItem" header="Patients" link="/app/walkinpatients" iconName="flaticon-user-6"
+          index="walkinpatients" isHeader />
       </ul>
 
       <!-- ADMIN -->

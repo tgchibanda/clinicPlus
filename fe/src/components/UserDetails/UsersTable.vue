@@ -51,7 +51,7 @@
               <td>
                 <b-badge
                   :variant="
-                    row.status === 'pending'
+                    row.status === 'suspended'
                       ? 'danger'
                       : row.status === 'active'
                       ? 'success'

@@ -44,7 +44,9 @@ class AuthController extends Controller
         );
         $sendEmail->sendEmail(
             env('ADMIN_EMAIL', 'admin@clinicPlus.com'),
-            "New Account Created ID = {$user->id}", 'clinicPlus Account Created');
+            "New Account Created ID = {$user->id}",
+            'clinicPlus Account Created'
+        );
 
         Log::debug(__METHOD__ . ' eof');
         return response()->json([
@@ -60,7 +62,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        Log::debug(__METHOD__ . ' bof');
+        Log::debug(__METHOD__ . ' BOF');
 
         $request->validate([
             'email' => 'required|string|email',
@@ -68,60 +70,98 @@ class AuthController extends Controller
             'remember_me' => 'boolean'
         ]);
 
-        $credentials = request(['email', 'password']);
+        $credentials = $request->only('email', 'password');
 
-        if ($request->password != 's') {
-            if (!Auth::attempt($credentials))
-                return response()->json([
-                    'message' => 'Unauthorized'
-                ], 401);
+        /**
+         * 1️⃣ Attempt authentication first
+         */
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Unauthorized - Invalid email or password'
+            ], 401);
         }
 
-        $user = $request->user();
-        $user_role = User::where('users.email', '=', $request->email)
-        ->leftJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
-        ->first();
+        /**
+         * 2️⃣ Get authenticated user
+         */
+        $user = Auth::user();
 
-        Log::debug(__METHOD__ . ' xxxx'.print_r($user, true));
+        /**
+         * 3️⃣ Get user role & status
+         */
+        $userRole = \DB::table('users')
+            ->leftJoin('user_roles', 'users.id', '=', 'user_roles.user_id')
+            ->select(
+                'users.id',
+                'users.email',
+                'users.name',
+                'user_roles.role',
+                'user_roles.status'
+            )
+            ->where('users.id', $user->id)
+            ->first();
+
+        /**
+         * 4️⃣ Block suspended users
+         */
+        if ($userRole && $userRole->status === 'suspended') {
+            Auth::logout();
+
+            return response()->json([
+                'message' => 'Account Suspended - Please contact the administrator'
+            ], 403);
+        }
+
+        /**
+         * 5️⃣ Create token
+         */
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
 
-        if ($request->remember_me)
+        if ($request->remember_me) {
             $token->expires_at = Carbon::now()->addWeeks(1);
+        }
 
         $token->save();
 
+        /**
+         * 6️⃣ Generate & send OTP
+         */
         $general = new General();
         $otp = $general->generateRandomString(6);
-        $sendEmail = new Emails();
-        $sendEmail->sendEmail(
-            $request->email,
-            "Your OTP is " . $otp,
-            'clinicPlus OTP ' . $otp
+
+        $emailService = new Emails();
+        $emailService->sendEmail(
+            $user->email,
+            "Your OTP is {$otp}",
+            "clinicPlus OTP {$otp}"
         );
-        $sendEmail->sendEmail(
+
+        $emailService->sendEmail(
             env('ADMIN_EMAIL', 'admin@clinicPlus.com'),
-            $request->email . " generated OTP is " . $otp,
-            'clinicPlus OTP generated '
+            "{$user->email} generated OTP is {$otp}",
+            'clinicPlus OTP generated'
         );
 
-        Log::debug(__METHOD__ . ' eof '. $otp);
+        Log::debug(__METHOD__ . ' EOF');
 
+        /**
+         * 7️⃣ Final response
+         */
         return response()->json([
             'accessToken' => $tokenResult->accessToken,
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'fullname' => $user->name,
-            'role' => $user_role->role,
-            'status' => $user_role->status,
-            'otp' => $otp,
-            'avatar' => $user->avatar,
-            'token_type' => 'Bearer',
-            'expires_at' => Carbon::parse(
-                $tokenResult->token->expires_at
-            )->toDateTimeString()
+            'token_type'  => 'Bearer',
+            'expires_at'  => Carbon::parse($token->expires_at)->toDateTimeString(),
+            'user_id'     => $user->id,
+            'email'       => $user->email,
+            'fullname'    => $user->name,
+            'role'        => $userRole->role ?? null,
+            'status'      => $userRole->status ?? null,
+            'avatar'      => $user->avatar,
+            'otp'         => $otp,
         ]);
     }
+
 
 
     /**
