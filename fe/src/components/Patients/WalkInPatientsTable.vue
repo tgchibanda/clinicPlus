@@ -78,7 +78,7 @@
                   'bg-warning': row.status !== 'completed' && row.status !== 'booked'
                 }">
                   {{ capFirst(row.status) }}
-                </span>
+              </span>
               </td>
 
               <td>
@@ -92,7 +92,15 @@
                   >
                     <i class="fa fa-user-circle"></i> View Profile
                   </b-button>
-                  
+                  <b-button
+                  v-if="row.status === 'waiting' || row.status === 'completed'"
+                  v-b-modal.modal-consultation
+                  variant="primary"
+                  size="sm"
+                  @click="sendInfo(row)"
+                >
+                  <i class="fa fa-search-plus"></i> Book
+                </b-button>
                 </div>
               </td>
             </tr>
